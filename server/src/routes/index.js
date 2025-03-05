@@ -1,0 +1,26 @@
+const adminRouter = require('./adminRouter')
+const staffRouter = require('./staffRouter')
+const customerRouter = require('./customerRouter')
+const authRouter = require('./authRouter')
+const { authRole, verifyToken } = require('../MiddleWares/authRole')
+const { register } = require('../controllers/adminController')
+const { logOut } = require('../controllers/userController')
+const tableRouter = require('./tableRouter')
+const reservationRouter = require('./reservationRouter')
+const waitingListRouter = require('./waitingListRouter')
+
+const apiRouter = require('express').Router()
+
+
+apiRouter.use('/customer', verifyToken, authRole('customer'), customerRouter)
+apiRouter.use('/admin', adminRouter)
+apiRouter.use('/staff', verifyToken, staffRouter)
+apiRouter.use('/table', verifyToken, tableRouter)
+apiRouter.use('/reservation', verifyToken, reservationRouter)
+apiRouter.use('/waitingList', verifyToken, waitingListRouter)
+apiRouter.use('/auth', authRouter)
+apiRouter.use('/register', register)
+apiRouter.use('/logOut', logOut)
+
+
+module.exports = apiRouter
