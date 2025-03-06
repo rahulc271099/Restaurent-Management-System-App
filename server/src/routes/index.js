@@ -12,7 +12,7 @@ const waitingListRouter = require('./waitingListRouter')
 const apiRouter = require('express').Router()
 
 
-apiRouter.use('/customer', verifyToken, authRole('customer'), customerRouter)
+apiRouter.use('/customer', verifyToken, customerRouter)
 apiRouter.use('/admin', adminRouter)
 apiRouter.use('/staff', verifyToken, staffRouter)
 apiRouter.use('/table', verifyToken, tableRouter)
