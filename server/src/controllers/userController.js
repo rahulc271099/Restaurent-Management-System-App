@@ -52,7 +52,8 @@ const login = async (req, res) => {
   res.status(200).json({
     success: true,
     messege: `${user.role} login successful`,
-    token
+    user,
+    dashboard,
   });
 };
 
