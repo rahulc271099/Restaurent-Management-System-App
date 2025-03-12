@@ -5,8 +5,8 @@ const tableRouter = require('express').Router()
 
 
 tableRouter.post('/createTable', authRole('admin'), createTable)
-tableRouter.get('/getTables', authRole('admin','staff'), getTables) 
-tableRouter.put('/updateTable/:tableId', authRole('admin','staff'), updateTable)
+tableRouter.get('/getTables', authRole('admin','staff','customer'), getTables) 
+tableRouter.put('/updateTable/:tableId', authRole('admin','staff','customer'), updateTable)
 tableRouter.delete('/removeTable/:tableId', authRole('admin'), deleteTable)
 
 module.exports = tableRouter

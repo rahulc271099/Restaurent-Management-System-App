@@ -4,10 +4,10 @@ const userDB = require("../Models/userModel");
 
 const createReservation = async (req, res) => {
   try {
-    const { table_id, reservation_time, status, menu_items } = req.body;
-    if (!table_id || !reservation_time) {
+    const { table_id, reservation_time, status, menu_items, party_number } = req.body;
+    if (!table_id || !reservation_time || !party_number) {
       return res.status(404).json({
-        error: "Table id and reservation time are required",
+        error: "Table id, reservation time are required and party number required",
       });
     }
     let customer_name;
@@ -43,12 +43,13 @@ const createReservation = async (req, res) => {
       user_id: reservationUserId,
       table_id,
       reservation_time,
+      party_number,
       status: status || "confirmed", // Defaults to "confirmed" if not provided
       menu_items,
     });
 
     const savedReservation = await newReservation.save();
-    return res.status(201).json({
+    return res.status(200).json({
       success: true,
       data: savedReservation,
     });

@@ -10,13 +10,17 @@ const reservationSchema = new mongoose.Schema(
       required: true,
     },
     reservation_time: { type: Date, required: true },
+    party_number:{type:String,required:true},
     status: {
       type: String,
       enum: ["confirmed", "waiting", "completed", "cancelled"],
       default: "confirmed",
     },
     // If you need to allow pre-ordering menu items along with a reservation
-    menu_items: [{ type: mongoose.Schema.Types.ObjectId, ref: "menuItems" }],
+    menu_items: [{
+       itemId:{type: mongoose.Schema.Types.ObjectId, ref: "menuItems"},
+      quantity:{type:Number,required:true},
+      }],
   },
   {
     timestamps: true,

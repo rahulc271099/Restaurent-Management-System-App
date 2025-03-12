@@ -9,7 +9,7 @@ const createMenuItem = async (req, res) => {
       });
     }
 
-    const newMenuItem = new menuItemDB.save({
+    const newMenuItem = new menuItemDB({
       name,
       description,
       price,
@@ -29,6 +29,43 @@ const createMenuItem = async (req, res) => {
       success: false,
       error: "Internal server error",
     });
+  }
+};
+
+const getMenuItems = async (req, res) => {
+  try {
+    const { search, category, dietary, minPrice, maxPrice } = req.query;
+    const filter = {};
+
+    // Search by name or description (case-insensitive)
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Filter by category
+    if (category) {
+      filter.category = category;
+    }
+
+    // Filter by dietary preference
+    if (dietary) {
+      filter.dietary = dietary;
+    }
+
+    // Filter by price range
+    if (minPrice || maxPrice) {
+      filter.price = {};
+      if (minPrice) filter.price.$gte = parseFloat(minPrice);
+      if (maxPrice) filter.price.$lte = parseFloat(maxPrice);
+    }
+
+    const menuItems = await menuItemDB.find(filter);
+    res.status(200).json(menuItems);
+  } catch (error) {
+    res.status(500).json({ messege:"Internal server error", error });
   }
 };
 
@@ -93,4 +130,4 @@ const deleteMenuItem = async (req, res) => {
   }
 };
 
-module.exports = { createMenuItem, updateMenuItem, deleteMenuItem};
+module.exports = { createMenuItem, getMenuItems, updateMenuItem, deleteMenuItem};

@@ -1,4 +1,5 @@
 const jwt = require('jsonwebtoken');
+const userDB = require('../Models/userModel');
 
 const verifyToken = (req, res, next) => {
     try {
@@ -45,4 +46,25 @@ const verifyToken = (req, res, next) => {
     };
   };
 
-module.exports = { verifyToken, authRole };
+  const verifyUser = async (req, res) => {
+    const token = req.cookies.token;
+    if (!token) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+  
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const user = await userDB.findById(decoded.id).select("-password");
+  
+      if (!user) {
+        return res.status(401).json({ error: "User not found" });
+      }
+  
+      res.status(200).json({ user: { id: user._id, role: user.role, email: user.email,name:user.name },token });
+    } catch (err) {
+      res.status(401).json({ error: "Invalid token" });
+    }
+  };
+  
+
+module.exports = { verifyToken, authRole, verifyUser };

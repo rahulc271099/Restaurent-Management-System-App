@@ -1,6 +1,9 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 
 const FeaturePage = () => {
+
+  const navigate = useNavigate()
   const dishes = [
     {
       id: 1,
@@ -37,77 +40,6 @@ const FeaturePage = () => {
     },
   ];
   return (
-    // <div>
-    //   {/* Featured Section */}
-    //   <div className="py-12 bg-white">
-    //     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    //       <div className="text-center">
-    //         <h2 className="text-base font-semibold text-amber-600 tracking-wide uppercase">
-    //           Our Specialties
-    //         </h2>
-    //         <p className="mt-1 text-3xl font-extrabold text-gray-900 sm:text-4xl sm:tracking-tight">
-    //           Culinary Delights For Every Taste
-    //         </p>
-    //         <p className="max-w-xl mt-5 mx-auto text-lg text-gray-500">
-    //           Experience our chef's carefully curated selection of signature
-    //           dishes made with locally sourced ingredients.
-    //         </p>
-    //       </div>
-
-    //       <div className="mt-10">
-    //         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-    //           {[1, 2, 3].map((item) => (
-    //             <div
-    //               key={item}
-    //               className="flex flex-col overflow-hidden rounded-lg shadow-lg"
-    //             >
-    //               <div className="flex-shrink-0">
-    //                 <img
-    //                   className="h-48 w-full object-cover"
-    //                   src={`/api/placeholder/600/400?text=Dish ${item}`}
-    //                   alt={`Featured dish ${item}`}
-    //                 />
-    //               </div>
-    //               <div className="flex-1 bg-white p-6 flex flex-col justify-between">
-    //                 <div className="flex-1">
-    //                   <p className="text-sm font-medium text-amber-600">
-    //                     Chef's Special
-    //                   </p>
-    //                   <div className="block mt-2">
-    //                     <p className="text-xl font-semibold text-gray-900">
-    //                       {item === 1
-    //                         ? "Truffle Pasta"
-    //                         : item === 2
-    //                         ? "Herb-Crusted Salmon"
-    //                         : "Chocolate Soufflé"}
-    //                     </p>
-    //                     <p className="mt-3 text-base text-gray-500">
-    //                       {item === 1
-    //                         ? "Fresh handmade pasta with black truffle, parmesan and butter sauce."
-    //                         : item === 2
-    //                         ? "Premium salmon fillet with an aromatic herb crust, served with seasonal vegetables."
-    //                         : "Classic chocolate soufflé with a molten center, served with vanilla ice cream."}
-    //                     </p>
-    //                   </div>
-    //                 </div>
-    //                 <div className="mt-6">
-    //                   <div className="flex items-center">
-    //                     <div className="flex text-sm text-gray-500">
-    //                       <span className="font-medium text-gray-900">
-    //                         ${item === 1 ? "24" : item === 2 ? "28" : "12"}
-    //                       </span>
-    //                     </div>
-    //                   </div>
-    //                 </div>
-    //               </div>
-    //             </div>
-    //           ))}
-    //         </div>
-    //       </div>
-    //     </div>
-    //   </div>
-    // </div>
-
     <div className="bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         {/* Section heading with decorative elements */}
@@ -210,7 +142,9 @@ const FeaturePage = () => {
 
         {/* View all menu button */}
         <div className="mt-16 text-center">
-          <button className="inline-flex items-center px-6 py-3 border border-amber-600 text-base font-medium rounded-full text-amber-600 bg-white hover:bg-amber-600 hover:text-white transition-colors duration-300">
+          <button className="inline-flex items-center px-6 py-3 border border-amber-600 text-base font-medium rounded-full text-amber-600 bg-white hover:bg-amber-600 hover:text-white transition-colors duration-300"
+          onClick={()=>navigate("/customer/menu")}
+          >
             View complete menu
           </button>
         </div>

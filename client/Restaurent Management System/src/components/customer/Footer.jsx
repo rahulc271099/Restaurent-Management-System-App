@@ -4,12 +4,13 @@ import { SocialIcon } from "react-social-icons";
 const Footer = () => {
   return (
     <div>
-      {/* Footer */}
       <footer className="bg-gray-900 mt-auto">
         <div className="max-w-7xl mx-auto py-12 px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div className="col-span-1 md:col-span-1">
-              <span className="text-2xl font-bold text-white">Gusto</span>
+              <span className="text-2xl font-bold transition-colors duration-300 text-amber-600">
+                <span className="font-light">G</span>usto
+              </span>
               <p className="mt-2 text-sm text-gray-300">
                 Exceptional dining experience since 2010.
               </p>

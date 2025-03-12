@@ -10,7 +10,10 @@ const createTable = async (req, res) => {
       });
     }
 
+    const tableCount = await tableDB.countDocuments()
+    const tableName = `Table ${tableCount + 1}`
     const newTable = new tableDB({
+      name:tableName,
       capacity,
       status,
     });

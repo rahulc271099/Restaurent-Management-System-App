@@ -20,8 +20,9 @@ const LoginPage = () => {
     e.preventDefault();
     userLogin(data)
       .then((res) => {
+        console.log(res);
         console.log(res.data.user.role);
-        const userData = res.data.user
+        const userData = {...res.data.user,token:res.data.token}
         login(userData)
 
         // Redirect according to the user's role.
@@ -30,7 +31,7 @@ const LoginPage = () => {
           } else if (userData.role === "staff") {
             navigate("/staff", { replace: true });
           } else if (userData.role === "customer") {
-            navigate("/customer", { replace: true });
+            navigate("/customer/home", { replace: true });
           } else {
             // Fallback route if role is unknown
             navigate("/", { replace: true });

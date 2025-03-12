@@ -9,6 +9,10 @@ const menuItemSchema = new mongoose.Schema({
     enum: ["appetizer", "main course", "dessert", "beverage"],
     required: true,
   },
+  dietary: {
+    type: String,
+    enum: ["vegetarian", "vegan", "gluten-free", "non-vegetarian"],
+  },
   availability: {
     type: String,
     enum: ["in-stock", "out-of-stock"],

@@ -1,9 +1,9 @@
 import React from "react";
-import Header from "../components/user/Header";
-import Footer from "../components/user/Footer";
+import Header from "../components/customer/Header";
+import Footer from "../components/customer/Footer";
 import { Outlet } from "react-router-dom";
 
-const UserLayout = () => {
+const CustomerLayout = () => {
   return (
     <div className="flex flex-col min-h-screen">
       <Header />
@@ -15,4 +15,4 @@ const UserLayout = () => {
   );
 };
 
-export default UserLayout;
+export default CustomerLayout;
