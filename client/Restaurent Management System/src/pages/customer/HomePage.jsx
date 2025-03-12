@@ -1,5 +1,5 @@
 import React from 'react'
-import HeroSection from '../../components/customer/HeroSection'
+import HeroSection from '../../components/user/HeroSection'
 import FeaturePage from './FeaturePage'
 
 const HomePage = () => {

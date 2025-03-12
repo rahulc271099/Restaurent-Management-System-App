@@ -9,6 +9,8 @@ import AdminDashboard from "../pages/admin/AdminDashboard";
 import ProtectedRoute from "../components/admin/ProtectedRoute";
 import ReservationPage from "../pages/customer/ReservationPage";
 import AdminMenuPage from "../pages/admin/AdminMenuPage";
+import ManageTable from "../pages/admin/ManageTable";
+import ManageStaff from "../pages/admin/ManageStaff";
 
 export const router = createBrowserRouter([
   {
@@ -61,6 +63,10 @@ export const router = createBrowserRouter([
       {
         path:"menu",
         element: <AdminMenuPage/>,
+        children: [
+          { path: "manageTable", element: <ManageTable /> },
+          { path: "manageStaff", element: <ManageStaff /> },
+        ],
       },
     ],
   },

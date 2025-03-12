@@ -10,3 +10,7 @@ export const userLogin = (data) =>{
 export const verifyUser = () =>{
     return axiosInstance.get('/auth/verify')
 }
+
+export const userLogout = () =>{
+    return axiosInstance.post('/logout')
+}

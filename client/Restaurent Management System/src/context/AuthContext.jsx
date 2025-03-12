@@ -18,7 +18,8 @@ export const AuthProvider = ({ children }) => {
    useEffect(() => {
     verifyUser().then(res=>{
       console.log(res.data);
-      setUser(res.data)
+      // setUser(res.data)
+      setUser(res.data.user ? { ...res.data.user, token: res.data.token } : null);
     }).catch(err=>{
       console.log(err);
       setUser(null)

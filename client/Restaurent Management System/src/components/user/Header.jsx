@@ -2,10 +2,14 @@ import React from "react";
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext";
+import { userLogout } from "../../services/userServices";
+import { toast } from "react-toastify";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const { logout } = useAuth();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -15,6 +19,20 @@ const Header = () => {
   const handleNavigation = (path, item) => {
     setActive(item.toLowerCase());
     navigate(path);
+  };
+
+  //logout function
+  const handleLogout = () => {
+    userLogout()
+      .then((res) => {
+        console.log(res);
+        logout();
+        navigate("/login");
+        toast.success("User logged out successfully");
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   // Add scroll event listener
@@ -113,10 +131,17 @@ const Header = () => {
 
               <button
                 type="button"
+                onClick={() => navigate("/customer/reservation")}
                 className="inline-flex items-center px-5 py-2.5 text-sm font-medium rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white shadow-md transition-all duration-300 hover:shadow-amber-400/20 hover:translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
-                onClick={()=>navigate("/customer/reservation")}
               >
                 Book a Table
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="inline-flex items-center px-5 py-2.5 text-sm font-medium rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white shadow-md transition-all duration-300 hover:shadow-amber-400/20 hover:translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
+              >
+                Logout
               </button>
             </div>
 

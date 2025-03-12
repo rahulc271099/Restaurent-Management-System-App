@@ -1,6 +1,6 @@
 import React from "react";
-import Header from "../components/customer/Header";
-import Footer from "../components/customer/Footer";
+import Header from "../components/user/Header";
+import Footer from "../components/user/Footer";
 import { Outlet } from "react-router-dom";
 
 const CustomerLayout = () => {

@@ -13,12 +13,21 @@ const ProtectedRoute = ({ allowedRoles }) => {
     return <p>Loading...</p>; // Or a spinner component
   }
 
-  if (!data.token) {
+  // if (!data.token) {
+  //   return <Navigate to="/login" replace />;
+  // }
+
+   // Ensure user object is valid before accessing properties
+   if (!user?.token) {
     return <Navigate to="/login" replace />;
   }
 
 
-  if (allowedRoles && !allowedRoles.includes(data.user.role)) {
+  // if (allowedRoles && !allowedRoles.includes(data.user.role)) {
+  //   return <Navigate to="/customer/home" replace />;
+  // }
+
+  if (allowedRoles && !allowedRoles.includes(user?.role)) {
     return <Navigate to="/customer/home" replace />;
   }
 

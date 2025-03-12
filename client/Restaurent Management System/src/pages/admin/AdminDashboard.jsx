@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { getMenuItems } from "../../services/menuServices";
 import { useAuth } from "../../context/AuthContext";
+import { userLogout } from "../../services/userServices";
+import { useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 const AdminDashboard = () => {
 
@@ -9,8 +12,10 @@ const AdminDashboard = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [currentDate, setCurrentDate] = useState("");
-  const {user} = useAuth()
+  const {user,logout} = useAuth()
   const data = user
+
+  const navigate = useNavigate()
 
   useEffect(() => {
     getMenuItems()
@@ -38,6 +43,18 @@ const AdminDashboard = () => {
     setCurrentDate(today);
   }, []);
 
+
+  const handleLogout = () =>{
+    userLogout().then(res=>{
+      console.log(res);
+      logout()
+      navigate('/login')
+      toast.success("User logged out successfully")
+    }).catch(err=>{
+      console.log(err);
+    })
+  }
+ 
   return (
     <div className="min-h-screen bg-slate-900 text-gray-100">
       {/* Header */}
@@ -120,11 +137,14 @@ const AdminDashboard = () => {
             <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
               Billing
             </button>
-            <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
+            <button onClick={()=>navigate("menu")} className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
               Menu
             </button>
             <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
               New
+            </button>
+            <button onClick={handleLogout} className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
+              Logout
             </button>
           </div>
         </div>
@@ -162,7 +182,7 @@ const AdminDashboard = () => {
                 clipRule="evenodd"
               />
             </svg>
-            <span>{data ? data.user.name:"admin"}</span>
+            <span>{data ? data.name:"admin"}</span>
           </button>
         </div>
 
