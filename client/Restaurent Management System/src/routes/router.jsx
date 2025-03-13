@@ -11,6 +11,8 @@ import ReservationPage from "../pages/customer/ReservationPage";
 import AdminMenuPage from "../pages/admin/AdminMenuPage";
 import ManageTable from "../pages/admin/ManageTable";
 import ManageStaff from "../pages/admin/ManageStaff";
+import ManageMenuItems from "../pages/admin/ManageMenuItems";
+import ManageOrders from "../pages/admin/ManageOrders";
 
 export const router = createBrowserRouter([
   {
@@ -64,8 +66,10 @@ export const router = createBrowserRouter([
         path:"menu",
         element: <AdminMenuPage/>,
         children: [
-          { path: "manageTable", element: <ManageTable /> },
-          { path: "manageStaff", element: <ManageStaff /> },
+          { path: "manageTables", element: <ManageTable /> },
+          { path: "manageStaffs", element: <ManageStaff /> },
+          {path: "manageMenuItems", element: <ManageMenuItems/> },
+          {path: "manageOrders",element: <ManageOrders/>}
         ],
       },
     ],
