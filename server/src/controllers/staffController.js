@@ -7,8 +7,8 @@ const {
 
 const createStaff = async (req, res) => {
   try {
-    const { name, role, shift_start, shift_end, email, password } = req.body;
-    if (!name || !role || !shift_start || !shift_end || !email || !password) {
+    const { name, email, password, phone, staffDetails } = req.body;
+    if (!name || !email || !password || !phone) {
       return res.status(400).json({
         error: "All fields are required",
       });
@@ -22,10 +22,15 @@ const createStaff = async (req, res) => {
     const hashedPassword = await hashPassword(password);
     const newStaff = new userDB({
       name,
-      role,
-      shift_start,
-      shift_end,
+      role:'staff',
+      staffDetails: {
+        shift_start: staffDetails?.shift_start,
+        shift_end: staffDetails?.shift_end,
+        position: staffDetails?.position,
+        status: staffDetails?.status,
+      },
       email,
+      phone,
       password: hashedPassword,
     });
 
@@ -42,10 +47,9 @@ const createStaff = async (req, res) => {
   }
 };
 
-
 const getStaff = async (req, res) => {
   try {
-    const staffs = await userDB.find({role:'staff'});
+    const staffs = await userDB.find({ role: "staff" });
     if (!staffs) {
       return res.status(404).json({
         error: "No staffs found",
@@ -66,7 +70,8 @@ const getStaff = async (req, res) => {
 const updateStaff = async (req, res) => {
   try {
     const { staffId } = req.params;
-    const { name, role, staffDetails, email, password } = req.body;
+    console.log(req.body);
+    const { name, role, email, phone, password, staffDetails } = req.body;
     const staff = await userDB.findById(staffId);
     if (!staff) {
       return res.status(400).json({
@@ -74,20 +79,24 @@ const updateStaff = async (req, res) => {
       });
     }
 
-    const hashedPassword = await hashPassword(password);
+    // Prepare update object
+    const updatedData = {
+      name,
+      email,
+      phone,
+      role:'staff',
+      staffDetails,
+    };
+
+    // Only hash and update the password if it's provided
+    if (password) {
+      updatedData.password = await hashPassword(password);
+    }
+
+
     const updatedStaff = await userDB.findByIdAndUpdate(
       staffId,
-      {
-        name,
-        role,
-        staffDetails: {
-            shift_start: staffDetails.shift_start,
-            shift_end: staffDetails.shift_end,
-            position: staffDetails.position,
-          },
-        email,
-        password: hashedPassword,
-      },
+      updatedData,
       { new: true }
     );
 
@@ -127,4 +136,4 @@ const deleteStaff = async (req, res) => {
   }
 };
 
-module.exports = { createStaff, getStaff, updateStaff, deleteStaff};
+module.exports = { createStaff, getStaff, updateStaff, deleteStaff };

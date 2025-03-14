@@ -25,6 +25,8 @@ const userSchema = new mongoose.Schema(
           type: String,
           enum: ['manager', 'waiter', 'chef'],
         },
+        //Staff status
+        status:{type:String,enum:['active','on-leave'],default:'active'},
       },
       // You can also include admin-specific fields here if necessary
       adminDetails: {

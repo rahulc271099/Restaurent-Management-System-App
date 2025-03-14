@@ -137,7 +137,7 @@ const AdminDashboard = () => {
             <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
               Billing
             </button>
-            <button onClick={()=>navigate("/admin/menu/manageTable")} className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
+            <button onClick={()=>navigate("/admin/menu/manageTables")} className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
               Menu
             </button>
             <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">

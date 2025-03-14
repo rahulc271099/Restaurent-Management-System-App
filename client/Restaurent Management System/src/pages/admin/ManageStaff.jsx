@@ -1,82 +1,182 @@
-import React, { useState } from "react";
-import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiMail, FiPhone, FiUser } from "react-icons/fi";
+import React, { useEffect, useState } from "react";
+import {
+  FiPlus,
+  FiEdit2,
+  FiTrash2,
+  FiSearch,
+  FiMail,
+  FiPhone,
+  FiUser,
+} from "react-icons/fi";
+import {
+  createStaff,
+  deleteStaff,
+  getStaff,
+  updateStaff,
+} from "../../services/staffServices";
+import { toast } from "react-toastify";
 
 const ManageStaff = () => {
-  const [staff, setStaff] = useState([
-    { id: 1, name: "John Doe", email: "john@restaurant.com", phone: "555-123-4567", role: "Manager", status: "Active" },
-    { id: 2, name: "Jane Smith", email: "jane@restaurant.com", phone: "555-987-6543", role: "Chef", status: "Active" },
-    { id: 3, name: "Mike Johnson", email: "mike@restaurant.com", phone: "555-456-7890", role: "Waiter", status: "Active" },
-    { id: 4, name: "Sarah Williams", email: "sarah@restaurant.com", phone: "555-789-0123", role: "Bartender", status: "On Leave" },
-  ]);
-  
+  //   const [staff, setStaff] = useState([
+  //     { id: 1, name: "John Doe", email: "john@restaurant.com", phone: "555-123-4567", role: "Manager", status: "Active" },
+  //     { id: 2, name: "Jane Smith", email: "jane@restaurant.com", phone: "555-987-6543", role: "Chef", status: "Active" },
+  //     { id: 3, name: "Mike Johnson", email: "mike@restaurant.com", phone: "555-456-7890", role: "Waiter", status: "Active" },
+  //     { id: 4, name: "Sarah Williams", email: "sarah@restaurant.com", phone: "555-789-0123", role: "Bartender", status: "On Leave" },
+  //   ]);
+
+  const [staff, setStaff] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [currentStaff, setCurrentStaff] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  
+
   const [formData, setFormData] = useState({
     name: "",
     email: "",
     phone: "",
-    role: "Waiter",
-    status: "Active",
     password: "",
-    confirmPassword: ""
+    staffDetails: {
+      shift_start: "",
+      shift_end: "",
+      status: "active",
+      position: "",
+    },
   });
-  
+
+  useEffect(() => {
+    getStaff()
+      .then((res) => {
+        console.log(res);
+        setStaff(res.data.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
+
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setFormData((prevData) => {
+      if (name in prevData.staffDetails) {
+        return {
+          ...prevData,
+          staffDetails: {
+            ...prevData.staffDetails,
+            [name]: value,
+          },
+        };
+      } else {
+        // return {
+        //   ...prevData,
+        //   [name]: value === "" ? prevData[name] : value, // Avoid empty password overwriting
+        // };
+        return {
+          ...prevData,
+          [name]: name === "password" ? value : value,
+        };
+      }
+    });
   };
-  
+
   // Handle staff creation
   const handleAddStaff = () => {
-    const newStaff = {
-      id: staff.length + 1,
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      role: formData.role,
-      status: formData.status
-    };
-    setStaff([...staff, newStaff]);
-    setShowAddModal(false);
+    createStaff(formData)
+      .then((res) => {
+        console.log(res);
+        toast.success("Staff added successfully")
+        return getStaff();
+      })
+      .then((response) => {
+        setStaff(response.data.data);
+        setShowAddModal(false);
+        setFormData({
+            name: "",
+            email: "",
+            phone: "",
+            password: "",
+            staffDetails: {
+              shift_start: "",
+              shift_end: "",
+              status: "active",
+              position: "",
+            },
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        toast.error(err.response.data.error)
+      });
+  };
+
+  // Handle edit staff
+  const handleEditStaff = () => {
+    updateStaff(formData, currentStaff._id)
+      .then((res) => {
+        console.log(res);
+        return getStaff();
+      })
+      .then((response) => {
+        console.log(response);
+        setStaff(response.data.data);
+        toast.success("Staff updated successfully");
+        setShowEditModal(false);
+        setCurrentStaff("");
+        setFormData({
+          name: "",
+          email: "",
+          phone: "",
+          password: "",
+          staffDetails: {
+            shift_start: "",
+            shift_end: "",
+            status: "active",
+            position: "",
+          },
+        });
+      })
+      .catch((err) => {
+        console.log(err);
+        toast.error(err.response.data.error);
+      });
+  };
+
+  // Handle delete staff
+  const handleDeleteStaff = () => {
+    deleteStaff(currentStaff._id)
+      .then((res) => {
+        console.log(res);
+        return getStaff();
+      })
+      .then((response) => {
+        console.log(response);
+        setStaff(response.data.data)
+        toast.success("Staff removed successfully");
+        setShowDeleteModal(false);
+      })
+      .catch((err) => {
+        console.log(err);
+        toast.error(err.response.data.error);
+      });
+  };
+
+  const handleOpenAddModal = () => {
     setFormData({
       name: "",
       email: "",
       phone: "",
-      role: "Waiter",
-      status: "Active",
       password: "",
-      confirmPassword: ""
+      staffDetails: {
+        shift_start: "",
+        shift_end: "",
+        status: "active",
+        position: "",
+      },
     });
+    setShowAddModal(true);
   };
-  
-  // Handle edit staff
-  const handleEditStaff = () => {
-    const updatedStaff = staff.map(s => 
-      s.id === currentStaff.id ? { 
-        ...s, 
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        role: formData.role,
-        status: formData.status
-      } : s
-    );
-    setStaff(updatedStaff);
-    setShowEditModal(false);
-  };
-  
-  // Handle delete staff
-  const handleDeleteStaff = () => {
-    const updatedStaff = staff.filter(s => s.id !== currentStaff.id);
-    setStaff(updatedStaff);
-    setShowDeleteModal(false);
-  };
-  
+
   // Open edit modal with current staff data
   const openEditModal = (staffMember) => {
     setCurrentStaff(staffMember);
@@ -84,34 +184,48 @@ const ManageStaff = () => {
       name: staffMember.name,
       email: staffMember.email,
       phone: staffMember.phone,
-      role: staffMember.role,
-      status: staffMember.status,
       password: "",
-      confirmPassword: ""
+      staffDetails: {
+        shift_start: staffMember.staffDetails?.shift_start
+          ? new Date(staffMember.staffDetails.shift_start)
+              .toISOString()
+              .slice(0, 16)
+          : "", // Format for datetime-local
+        shift_end: staffMember.staffDetails?.shift_end
+          ? new Date(staffMember.staffDetails.shift_end)
+              .toISOString()
+              .slice(0, 16)
+          : "",
+        position: staffMember.staffDetails?.position || "",
+        status: staffMember.staffDetails?.status || "",
+      },
     });
     setShowEditModal(true);
   };
-  
+
   // Open delete modal with current staff
   const openDeleteModal = (staffMember) => {
     setCurrentStaff(staffMember);
     setShowDeleteModal(true);
   };
-  
+
   // Filter staff based on search term
-  const filteredStaff = staff.filter(s => 
-    s.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-    s.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    s.role.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredStaff = staff?.filter(
+    (s) =>
+      s.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      s.position.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Status badge color
   const getStatusColor = (status) => {
-    switch(status) {
-      case "Active": return "bg-green-100 text-green-800";
-      case "On Leave": return "bg-yellow-100 text-yellow-800";
-      case "Inactive": return "bg-red-100 text-red-800";
-      default: return "bg-gray-100 text-gray-800";
+    switch (status) {
+      case "Active":
+        return "bg-green-100 text-green-800";
+      case "On Leave":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
     }
   };
 
@@ -132,7 +246,7 @@ const ManageStaff = () => {
           />
         </div>
         <button
-          onClick={() => setShowAddModal(true)}
+          onClick={handleOpenAddModal}
           className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-5 py-2.5 flex items-center"
         >
           <FiPlus className="mr-2" />
@@ -146,17 +260,36 @@ const ManageStaff = () => {
           <table className="w-full text-sm text-left text-gray-500">
             <thead className="text-xs text-gray-700 uppercase bg-gray-50">
               <tr>
-                <th scope="col" className="px-6 py-3">Name</th>
-                <th scope="col" className="px-6 py-3">Email</th>
-                <th scope="col" className="px-6 py-3">Phone</th>
-                <th scope="col" className="px-6 py-3">Role</th>
-                <th scope="col" className="px-6 py-3">Status</th>
-                <th scope="col" className="px-6 py-3">Actions</th>
+                <th scope="col" className="px-6 py-3">
+                  Name
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Email
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Phone
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Position
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Shift start
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  shift end
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Status
+                </th>
+                {/* <th scope="col" className="px-6 py-3">Actions</th> */}
               </tr>
             </thead>
             <tbody>
-              {filteredStaff.map((staffMember) => (
-                <tr key={staffMember.id} className="bg-white border-b hover:bg-gray-50">
+              {filteredStaff?.map((staffMember) => (
+                <tr
+                  key={staffMember._id}
+                  className="bg-white border-b hover:bg-gray-50"
+                >
                   <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                     {staffMember.name}
                   </td>
@@ -172,10 +305,26 @@ const ManageStaff = () => {
                       {staffMember.phone}
                     </div>
                   </td>
-                  <td className="px-6 py-4">{staffMember.role}</td>
                   <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(staffMember.status)}`}>
-                      {staffMember.status}
+                    {staffMember.staffDetails.position}
+                  </td>
+                  <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                    {new Date(
+                      staffMember.staffDetails.shift_start
+                    ).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
+                    {new Date(
+                      staffMember.staffDetails.shift_end
+                    ).toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4">
+                    <span
+                      className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                        staffMember.status
+                      )}`}
+                    >
+                      {staffMember.staffDetails.status}
                     </span>
                   </td>
                   <td className="px-6 py-4 flex items-center space-x-3">
@@ -196,7 +345,10 @@ const ManageStaff = () => {
               ))}
               {filteredStaff.length === 0 && (
                 <tr className="bg-white border-b">
-                  <td colSpan="6" className="px-6 py-4 text-center text-gray-500">
+                  <td
+                    colSpan="6"
+                    className="px-6 py-4 text-center text-gray-500"
+                  >
                     No staff members found
                   </td>
                 </tr>
@@ -208,10 +360,12 @@ const ManageStaff = () => {
 
       {/* Add Staff Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4 overflow-auto">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full  max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-4 border-b">
-              <h3 className="text-lg font-medium text-gray-900">Add New Staff</h3>
+              <h3 className="text-lg font-medium text-gray-900">
+                Add New Staff
+              </h3>
             </div>
             <div className="px-6 py-4">
               <div className="mb-4">
@@ -228,7 +382,7 @@ const ManageStaff = () => {
                     value={formData.name}
                     onChange={handleInputChange}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full pl-10 p-2.5"
-                    placeholder="John Doe"
+                    placeholder="Name"
                     required
                   />
                 </div>
@@ -247,7 +401,7 @@ const ManageStaff = () => {
                     value={formData.email}
                     onChange={handleInputChange}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full pl-10 p-2.5"
-                    placeholder="john@restaurant.com"
+                    placeholder="name@gmail.com"
                     required
                   />
                 </div>
@@ -270,38 +424,21 @@ const ManageStaff = () => {
                   />
                 </div>
               </div>
-              <div className="mb-4">
+              {/* <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Role
+                  Position
                 </label>
                 <select
-                  name="role"
-                  value={formData.role}
+                  name="position"
+                  value={formData.staffDetails.position}
                   onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                 >
-                  <option value="Manager">Manager</option>
-                  <option value="Chef">Chef</option>
-                  <option value="Waiter">Waiter</option>
-                  <option value="Bartender">Bartender</option>
-                  <option value="Host">Host</option>
+                  <option value="manager">Manager</option>
+                  <option value="chef">Chef</option>
+                  <option value="waiter">Waiter</option>
                 </select>
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Status
-                </label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleInputChange}
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-                >
-                  <option value="Active">Active</option>
-                  <option value="On Leave">On Leave</option>
-                  <option value="Inactive">Inactive</option>
-                </select>
-              </div>
+              </div> */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Password
@@ -318,17 +455,63 @@ const ManageStaff = () => {
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirm Password
+                  Status
                 </label>
-                <input
-                  type="password"
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
+                <select
+                  name="status"
+                  value={formData.staffDetails.status}
                   onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-                  placeholder="••••••••"
+                >
+                  <option value="active">Active</option>
+                  <option value="on-leave">On Leave</option>
+                </select>
+              </div>
+              {/* Shift Start */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Shift Start
+                </label>
+                <input
+                  type="datetime-local"
+                  name="shift_start"
+                  value={formData.staffDetails.shift_start}
+                  onChange={handleInputChange}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                   required
                 />
+              </div>
+
+              {/* Shift End */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Shift End
+                </label>
+                <input
+                  type="datetime-local"
+                  name="shift_end"
+                  value={formData.staffDetails.shift_end}
+                  onChange={handleInputChange}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                  required
+                />
+              </div>
+
+              {/* Position */}
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Position
+                </label>
+                <select
+                  name="position"
+                  value={formData.staffDetails.position}
+                  onChange={handleInputChange}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                >
+                  <option value="manager">Manager</option>
+                  <option value="chef">Chef</option>
+                  <option value="waiter">Waiter</option>
+                </select>
               </div>
             </div>
             <div className="px-6 py-4 border-t bg-gray-50 flex justify-end space-x-3">
@@ -351,15 +534,19 @@ const ManageStaff = () => {
 
       {/* Edit Staff Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex
-        items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 flex
+        items-center justify-center p-4 overflow-auto"
+        >
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-4 border-b">
               <h3 className="text-lg font-medium text-gray-900">Edit Staff</h3>
             </div>
             <div className="px-6 py-4">
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Name
+                </label>
                 <input
                   type="text"
                   name="name"
@@ -370,7 +557,9 @@ const ManageStaff = () => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Email
+                </label>
                 <input
                   type="email"
                   name="email"
@@ -381,7 +570,22 @@ const ManageStaff = () => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  name="password"
+                  value={formData.password}
+                  onChange={handleInputChange}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Phone
+                </label>
                 <input
                   type="tel"
                   name="phone"
@@ -391,31 +595,58 @@ const ManageStaff = () => {
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Shift start
+                </label>
+                <input
+                  type="datetime-local"
+                  name="shift_start"
+                  value={formData.staffDetails.shift_start}
+                  onChange={handleInputChange}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Shift end
+                </label>
+                <input
+                  type="datetime-local"
+                  name="shift_end"
+                  value={formData.staffDetails.shift_end}
+                  onChange={handleInputChange}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Position
+                </label>
                 <select
-                  name="role"
-                  value={formData.role}
+                  name="position"
+                  value={formData.staffDetails.position}
                   onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                 >
-                  <option value="Manager">Manager</option>
-                  <option value="Chef">Chef</option>
-                  <option value="Waiter">Waiter</option>
-                  <option value="Bartender">Bartender</option>
-                  <option value="Host">Host</option>
+                  <option value="manager">Manager</option>
+                  <option value="chef">Chef</option>
+                  <option value="waiter">Waiter</option>
                 </select>
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Status</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Status
+                </label>
                 <select
                   name="status"
-                  value={formData.status}
+                  value={formData.staffDetails.status}
                   onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                 >
-                  <option value="Active">Active</option>
-                  <option value="On Leave">On Leave</option>
-                  <option value="Inactive">Inactive</option>
+                  <option value="active">Active</option>
+                  <option value="on-leave">On Leave</option>
                 </select>
               </div>
             </div>
@@ -442,10 +673,14 @@ const ManageStaff = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="px-6 py-4 border-b">
-              <h3 className="text-lg font-medium text-gray-900">Confirm Delete</h3>
+              <h3 className="text-lg font-medium text-gray-900">
+                Confirm Delete
+              </h3>
             </div>
             <div className="px-6 py-4">
-              <p className="text-gray-700">Are you sure you want to delete {currentStaff?.name}?</p>
+              <p className="text-gray-700">
+                Are you sure you want to delete {currentStaff?.name}?
+              </p>
             </div>
             <div className="px-6 py-4 border-t bg-gray-50 flex justify-end space-x-3">
               <button

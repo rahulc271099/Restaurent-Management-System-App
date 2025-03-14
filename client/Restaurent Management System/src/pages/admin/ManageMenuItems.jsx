@@ -34,6 +34,7 @@ const ManageMenuItems = () => {
     description: "",
     image: null,
     availability: "",
+    isAvailable: false, 
   });
 
   // Handle form input changes
@@ -46,6 +47,7 @@ const ManageMenuItems = () => {
   const handleCheckboxChange = (e) => {
     setFormData({
       ...formData,
+      isAvailable: e.target.checked,
       availability: e.target.checked ? "in-stock" : "out-of-stock",
     });
   };
@@ -72,7 +74,8 @@ const ManageMenuItems = () => {
           category: "",
           description: "",
           image: null,
-          isAvailable: true,
+          availability:"",
+          isAvailable: false,
         });
       })
       .catch((err) => {
@@ -103,6 +106,15 @@ const ManageMenuItems = () => {
         console.log(response);
         setMenuItems(response.data);
         setShowEditModal(false);
+        setFormData({
+            name: "",
+            price: "",
+            category: "",
+            description: "",
+            image: null,
+            availability:"",
+            isAvailable: false,
+          });
       })
       .catch((err) => {
         console.log(err);
@@ -130,6 +142,18 @@ const ManageMenuItems = () => {
     setShowDeleteModal(false);
   };
 
+  const handleOpenAddModal = () => {
+    setFormData({
+      name: "",
+      price: "",
+      category: "main course",
+      description: "",
+      image: null,
+      availability: "",
+      isAvailable:false,
+    });
+    setShowAddModal(true)
+  };
   // Open edit modal with current item data
   const openEditModal = (item) => {
     setCurrentItem(item);
@@ -140,6 +164,7 @@ const ManageMenuItems = () => {
       description: item.description,
       image: item.image,
       availability: item.availability,
+      isAvailable:item.availability === 'in-stock' ? true:false,
     });
     setShowEditModal(true);
   };
@@ -155,7 +180,9 @@ const ManageMenuItems = () => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.description &&
-        item.description.toLowerCase().includes(searchTerm.toLowerCase()));
+        item.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (item.availability && 
+        item.availability.toLowerCase().includes(searchTerm.toLowerCase()))  
     const matchesCategory =
       categoryFilter === "All" || item.category === categoryFilter;
     return matchesSearch && matchesCategory;
@@ -206,7 +233,7 @@ const ManageMenuItems = () => {
             ))}
           </select>
           <button
-            onClick={() => setShowAddModal(true)}
+            onClick={handleOpenAddModal}
             className="bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm px-5 py-2.5 flex items-center whitespace-nowrap"
           >
             <FiPlus className="mr-2" />
@@ -479,7 +506,7 @@ const ManageMenuItems = () => {
                   type="checkbox"
                   id="isAvailable"
                   name="isAvailable"
-                  checked={formData.availability === "in-stock"}
+                  checked={formData.isAvailable}
                   onChange={handleCheckboxChange}
                   className="mr-2"
                 />
@@ -520,7 +547,7 @@ const ManageMenuItems = () => {
             </div>
             <div className="px-6 py-4">
               <p className="text-gray-700">
-                Are you sure you want to delete "{currentItem ?.name}"?
+                Are you sure you want to delete "{currentItem?.name}"?
               </p>
             </div>
             <div className="px-6 py-4 border-t bg-gray-50 flex justify-end space-x-3">

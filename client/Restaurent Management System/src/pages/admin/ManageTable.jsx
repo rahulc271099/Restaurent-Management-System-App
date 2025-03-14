@@ -244,20 +244,6 @@ const ManageTable = () => {
               </h3>
             </div>
             <div className="px-6 py-4">
-              {/* <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Table Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleInputChange}
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-                  placeholder="Table Name"
-                  required
-                />
-              </div> */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Capacity
