@@ -1,86 +1,111 @@
-import React, { useState } from "react";
-import { FiPlus, FiEdit2, FiTrash2, FiSearch, FiDollarSign, FiTag, FiInfo } from "react-icons/fi";
+import React, { useEffect, useState } from "react";
+import {
+  FiPlus,
+  FiEdit2,
+  FiTrash2,
+  FiSearch,
+  FiDollarSign,
+  FiTag,
+  FiInfo,
+} from "react-icons/fi";
+import { addMenuItems, deleteMenuItem, getMenuItems, updateMenuItem } from "../../services/menuServices";
+import { toast } from "react-toastify";
 
 const ManageMenuItems = () => {
-  const [menuItems, setMenuItems] = useState([
-    { id: 1, name: "Grilled Salmon", price: 24.99, category: "Main Course", description: "Fresh salmon grilled to perfection with herbs and lemon", image: null, isAvailable: true },
-    { id: 2, name: "Caesar Salad", price: 12.99, category: "Starter", description: "Crisp romaine lettuce with Caesar dressing, croutons and parmesan", image: null, isAvailable: true },
-    { id: 3, name: "Chocolate Cake", price: 8.99, category: "Dessert", description: "Rich chocolate cake with ganache frosting", image: null, isAvailable: true },
-    { id: 4, name: "House Wine", price: 9.99, category: "Beverage", description: "Red house wine by the glass", image: null, isAvailable: false },
-  ]);
-  
+
+  const [menuItems, setMenuItems] = useState([]);
+  const [categories, setCategories] = useState([]);
+
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
-  
+
   const [formData, setFormData] = useState({
     name: "",
     price: "",
-    category: "Main Course",
+    category: "main course",
     description: "",
     image: null,
-    isAvailable: true
+    availability: "",
   });
-  
-  // Categories for filtering
-  const categories = ["All", "Starter", "Main Course", "Dessert", "Beverage", "Side"];
-  
+
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
-  
+
   // Handle checkbox change
   const handleCheckboxChange = (e) => {
-    setFormData({ ...formData, isAvailable: e.target.checked });
+    setFormData({
+      ...formData,
+      availability: e.target.checked ? "in-stock" : "out-of-stock",
+    });
   };
-  
+
   // Handle menu item creation
   const handleAddMenuItem = () => {
     const newItem = {
-      id: menuItems.length + 1,
       ...formData,
-      price: parseFloat(formData.price)
+      price: parseFloat(formData.price),
     };
-    setMenuItems([...menuItems, newItem]);
+    addMenuItems(newItem).then(res=>{
+        console.log(res);
+        toast.success("Menu item added successfully")
+    }).catch(err=>{
+        console.log(err);
+        toast.error(err.response.data.error)
+    })
     setShowAddModal(false);
     setFormData({
       name: "",
       price: "",
-      category: "Main Course",
+      category: "",
       description: "",
       image: null,
-      isAvailable: true
+      isAvailable: true,
     });
   };
-  
+
   // Handle edit menu item
   const handleEditMenuItem = () => {
-    const updatedItems = menuItems.map(item => 
-      item.id === currentItem.id ? { 
-        ...item, 
-        name: formData.name,
-        price: parseFloat(formData.price),
-        category: formData.category,
-        description: formData.description,
-        isAvailable: formData.isAvailable
-      } : item
-    );
-    setMenuItems(updatedItems);
+    // Create updated item with new values
+  const updatedItem = {
+    ...currentItem, // Keep existing properties
+    name: formData.name,
+    price: parseFloat(formData.price),
+    category: formData.category,
+    description: formData.description,
+    availability: formData.isAvailable ? "in-stock" : "out-of-stock", // Ensure correct format
+  };
+
+    updateMenuItem(updatedItem,currentItem._id).then(res=>{
+        console.log(res);
+        toast.success(`${res.data.data.name} updated successfully`)
+    }).catch(err=>{
+        console.log(err);
+        toast.error(err.response.data.error)
+    })
+
     setShowEditModal(false);
   };
-  
+
   // Handle delete menu item
   const handleDeleteMenuItem = () => {
-    const updatedItems = menuItems.filter(item => item.id !== currentItem.id);
-    setMenuItems(updatedItems);
+    deleteMenuItem(currentItem._id).then(res=>{
+        console.log(res);
+        toast.success("Menu item deletted successfully")
+    }).catch(err=>{
+        console.log(err);
+        toast.error(err.response.data.error)
+    })
+
     setShowDeleteModal(false);
   };
-  
+
   // Open edit modal with current item data
   const openEditModal = (item) => {
     setCurrentItem(item);
@@ -90,24 +115,42 @@ const ManageMenuItems = () => {
       category: item.category,
       description: item.description,
       image: item.image,
-      isAvailable: item.isAvailable
+      availability: item.availability,
     });
     setShowEditModal(true);
   };
-  
+
   // Open delete modal with current item
   const openDeleteModal = (item) => {
     setCurrentItem(item);
     setShowDeleteModal(true);
   };
-  
+
   // Filter menu items based on search term and category
-  const filteredItems = menuItems.filter(item => {
-    const matchesSearch = item.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                          item.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = categoryFilter === "All" || item.category === categoryFilter;
+  const filteredItems = menuItems.filter((item) => {
+    const matchesSearch =
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (item.description &&
+        item.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesCategory =
+      categoryFilter === "All" || item.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
+
+  useEffect(() => {
+    getMenuItems()
+      .then((res) => {
+        console.log(res);
+        setMenuItems(res.data);
+        const uniqueCategories = [
+          ...new Set(res.data.map((item) => item.category)),
+        ];
+        setCategories(uniqueCategories);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
 
   return (
     <div className="h-full">
@@ -131,8 +174,11 @@ const ManageMenuItems = () => {
             onChange={(e) => setCategoryFilter(e.target.value)}
             className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg px-4 py-2.5"
           >
-            {categories.map(category => (
-              <option key={category} value={category}>{category}</option>
+            <option value="All">All</option> {/* Add "All" as default */}
+            {categories.map((category) => (
+              <option key={category} value={category}>
+                {category}
+              </option>
             ))}
           </select>
           <button
@@ -148,27 +194,46 @@ const ManageMenuItems = () => {
       {/* Menu items grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredItems.map((item) => (
-          <div key={item.id} className="bg-white rounded-lg shadow overflow-hidden">
+          <div
+            key={item._id}
+            className="bg-white rounded-lg shadow overflow-hidden"
+          >
             <div className="h-48 bg-gray-200 flex items-center justify-center">
               {item.image ? (
-                <img src={item.image} alt={item.name} className="h-full w-full object-cover" />
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="h-full w-full object-cover"
+                />
               ) : (
                 <span className="text-gray-400">No image</span>
               )}
             </div>
             <div className="p-4">
               <div className="flex justify-between items-start mb-2">
-                <h3 className="text-lg font-semibold text-gray-900">{item.name}</h3>
-                <span className="text-lg font-bold text-blue-600">${item.price.toFixed(2)}</span>
+                <h3 className="text-lg font-semibold text-gray-900">
+                  {item.name}
+                </h3>
+                <span className="text-lg font-bold text-blue-600">
+                  ${item.price.toFixed(2)}
+                </span>
               </div>
               <div className="flex items-center mb-2">
                 <FiTag className="text-gray-500 mr-2" />
                 <span className="text-sm text-gray-500">{item.category}</span>
               </div>
-              <p className="text-gray-600 mb-4 h-12 overflow-hidden">{item.description}</p>
+              <p className="text-gray-600 mb-4 h-12 overflow-hidden">
+                {item.description}
+              </p>
               <div className="flex items-center justify-between">
-                <span className={`px-2 py-1 rounded-full text-xs font-medium ${item.isAvailable ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
-                  {item.isAvailable ? 'Available' : 'Unavailable'}
+                <span
+                  className={`px-2 py-1 rounded-full text-xs font-medium ${
+                    item.availability && item.availability.trim() === "in-stock"
+                      ? "bg-green-100 text-green-800"
+                      : "bg-red-100 text-red-800"
+                  }`}
+                >
+                  {item.availability}
                 </span>
                 <div className="flex items-center space-x-3">
                   <button
@@ -200,7 +265,9 @@ const ManageMenuItems = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="px-6 py-4 border-b">
-              <h3 className="text-lg font-medium text-gray-900">Add New Menu Item</h3>
+              <h3 className="text-lg font-medium text-gray-900">
+                Add New Menu Item
+              </h3>
             </div>
             <div className="px-6 py-4">
               <div className="mb-4">
@@ -248,9 +315,12 @@ const ManageMenuItems = () => {
                   onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                 >
-                  {categories.filter(c => c !== "All").map(category => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
+                  {categories
+                    .map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
                 </select>
               </div>
               <div className="mb-4">
@@ -288,7 +358,10 @@ const ManageMenuItems = () => {
                   onChange={handleCheckboxChange}
                   className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
                 />
-                <label htmlFor="isAvailable" className="ml-2 text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="isAvailable"
+                  className="ml-2 text-sm font-medium text-gray-700"
+                >
                   Item is available
                 </label>
               </div>
@@ -316,12 +389,12 @@ const ManageMenuItems = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="px-6 py-4 border-b">
-              <h3 className="text-lg font-medium text-gray-900">Edit Menu Item</h3>
+              <h3 className="text-lg font-medium text-gray-900">
+                Edit Menu Item
+              </h3>
             </div>
             <div className="px-6 py-4">
               <div className="mb-4">
-
-                //chatgpt
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Item Name
                 </label>
@@ -359,9 +432,12 @@ const ManageMenuItems = () => {
                   onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                 >
-                  {categories.filter(c => c !== "All").map(category => (
-                    <option key={category} value={category}>{category}</option>
-                  ))}
+                  {categories
+                    .map((category) => (
+                      <option key={category} value={category}>
+                        {category}
+                      </option>
+                    ))}
                 </select>
               </div>
               <div className="mb-4">
@@ -381,11 +457,14 @@ const ManageMenuItems = () => {
                   type="checkbox"
                   id="isAvailable"
                   name="isAvailable"
-                  checked={formData.isAvailable}
+                  checked={formData.availability === "in-stock"}
                   onChange={handleCheckboxChange}
                   className="mr-2"
                 />
-                <label htmlFor="isAvailable" className="text-sm font-medium text-gray-700">
+                <label
+                  htmlFor="isAvailable"
+                  className="text-sm font-medium text-gray-700"
+                >
                   Item is available
                 </label>
               </div>
@@ -413,10 +492,14 @@ const ManageMenuItems = () => {
         <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
             <div className="px-6 py-4 border-b">
-              <h3 className="text-lg font-medium text-gray-900">Confirm Delete</h3>
+              <h3 className="text-lg font-medium text-gray-900">
+                Confirm Delete
+              </h3>
             </div>
             <div className="px-6 py-4">
-              <p className="text-gray-700">Are you sure you want to delete "{currentItem?.name}"?</p>
+              <p className="text-gray-700">
+                Are you sure you want to delete "{currentItem?.name}"?
+              </p>
             </div>
             <div className="px-6 py-4 border-t bg-gray-50 flex justify-end space-x-3">
               <button

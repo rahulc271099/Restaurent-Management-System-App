@@ -6,8 +6,8 @@ const menuItemRouter = require('express').Router()
 
 menuItemRouter.post('/createMenuItem', authRole('admin','staff'), createMenuItem)
 menuItemRouter.get('/getMenuItems' , authRole('customer','admin','staff'), getMenuItems)
-menuItemRouter.put('/updateMenuItem', authRole('admin','staff'), updateMenuItem)
-menuItemRouter.delete('/deleteMenuItem', authRole('admin','staff'), deleteMenuItem)
+menuItemRouter.put('/updateMenuItem/:menuItemId', authRole('admin','staff'), updateMenuItem)
+menuItemRouter.delete('/deleteMenuItem/:menuItemId', authRole('admin','staff'), deleteMenuItem)
 
 
 module.exports = menuItemRouter

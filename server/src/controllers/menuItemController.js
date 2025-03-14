@@ -72,20 +72,17 @@ const getMenuItems = async (req, res) => {
 const updateMenuItem = async (req, res) => {
   try {
     const { menuItemId } = req.params;
-
-    const itemExist = await menuItemDB.findOne(menuItemId);
+    const { name, description, price, category, availability } = req.body;
+    const itemExist = await menuItemDB.findById(menuItemId);
     if (!itemExist) {
       return res.status(400).json({
         error: "Menu item not found",
       });
     }
 
-    const updatedMenuItem = await menuItemDB.findByIdAndUpdate(menuItemId, {
+    const updatedMenuItem = await menuItemDB.findByIdAndUpdate(menuItemId, {name, description, price, category, availability},{
       new: true,
     });
-    if (!updatedMenuItem) {
-      return res.status(404).json({ message: "Menu item not found" });
-    }
 
     res.status(200).json({
       success: true,
@@ -102,24 +99,18 @@ const updateMenuItem = async (req, res) => {
 
 const deleteMenuItem = async (req, res) => {
   try {
-    const { menuItemId } = req.body;
-
-    const itemExist = await menuItemDB.findOne(menuItemId);
+    const { menuItemId } = req.params;
+    const itemExist = await menuItemDB.findById(menuItemId);
     if (!itemExist) {
       return res.status(400).json({
         error: "Menu item not found",
       });
     }
-    const delettedMenuItem = await menuItemDB.findByIdAndDelete(id);
-    if (!delettedMenuItem) {
-      return res.status(404).json({
-        success: false,
-        error: "Menu item not found",
-      });
-    }
+    const delettedMenuItem = await menuItemDB.findByIdAndDelete(menuItemId);
     res.status(200).json({
       success: true,
       messege: "Menu item deletted successfully",
+      delettedMenuItem,
     });
   } catch (error) {
     console.log(error);
