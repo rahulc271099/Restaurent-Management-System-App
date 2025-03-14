@@ -18,7 +18,7 @@ const createTable = async (req, res) => {
       status,
     });
     const saved = await newTable.save();
-    res.status(400).json({
+    res.status(200).json({
       success: true,
       data: saved,
     });
@@ -53,7 +53,7 @@ const getTables = async (req, res) => {
 const updateTable = async (req, res) => {
   try {
     const { tableId } = req.params;
-    const { capacity, status, reservations } = req.body;
+    const { name, capacity, status, reservations } = req.body;
 
     const table = await tableDB.findById(tableId);
     if (!table) {
@@ -63,7 +63,7 @@ const updateTable = async (req, res) => {
     }
     const updatedTable = await tableDB.findByIdAndUpdate(
       tableId,
-      { capacity, status, reservations },
+      { name, capacity, status, reservations },
       { new: true }
     );
 

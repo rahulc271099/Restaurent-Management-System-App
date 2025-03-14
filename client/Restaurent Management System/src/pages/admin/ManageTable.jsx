@@ -1,99 +1,147 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { FiPlus, FiEdit2, FiTrash2, FiSearch } from "react-icons/fi";
+import {
+  createTable,
+  deleteTable,
+  getTables,
+  updateTable,
+} from "../../services/tableServices";
+import { toast } from "react-toastify";
 
 const ManageTable = () => {
+  const [tables, setTables] = useState([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [currentTable, setCurrentTable] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
-    const [tables, setTables] = useState([
-        { id: 1, name: "Table 1", capacity: 4, status: "Available", location: "Main Floor" },
-        { id: 2, name: "Table 2", capacity: 2, status: "Occupied", location: "Main Floor" },
-        { id: 3, name: "Table 3", capacity: 6, status: "Reserved", location: "Patio" },
-        { id: 4, name: "Table 4", capacity: 8, status: "Available", location: "Private Room" },
-      ]);
-      
-      const [showAddModal, setShowAddModal] = useState(false);
-      const [showEditModal, setShowEditModal] = useState(false);
-      const [showDeleteModal, setShowDeleteModal] = useState(false);
-      const [currentTable, setCurrentTable] = useState(null);
-      const [searchTerm, setSearchTerm] = useState("");
-      
-      const [formData, setFormData] = useState({
-        name: "",
-        capacity: 2,
-        status: "Available",
-        location: "Main Floor"
-      });
-      
-      // Handle form input changes
-      const handleInputChange = (e) => {
-        const { name, value } = e.target;
-        setFormData({ ...formData, [name]: value });
-      };
-      
-      // Handle table creation
-      const handleAddTable = () => {
-        const newTable = {
-          id: tables.length + 1,
-          ...formData
-        };
-        setTables([...tables, newTable]);
+  const [formData, setFormData] = useState({
+    name: "",
+    capacity: 2,
+    status: "available",
+  });
+
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  useEffect(() => {
+    getTables().then((res) => {
+      console.log(res.data);
+      setTables(res.data.data);
+    });
+  }, []);
+
+  // Handle table creation
+  const handleAddTable = () => {
+    const newTable = {
+      ...formData,
+    };
+    createTable(newTable)
+      .then((res) => {
+        console.log(res);
+        toast.success("Table created successfully");
+        return getTables();
+      })
+      .then((response) => {
+        console.log(response);
+        setTables(response.data.data);
         setShowAddModal(false);
         setFormData({
-          name: "",
           capacity: 2,
-          status: "Available",
-          location: "Main Floor"
+          status: "available",
         });
-      };
-      
-      // Handle edit table
-      const handleEditTable = () => {
-        const updatedTables = tables.map(table => 
-          table.id === currentTable.id ? { ...table, ...formData } : table
-        );
-        setTables(updatedTables);
+      })
+      .catch((err) => {
+        console.log(err);
+        toast.error(err.response.data.error);
+      });
+  };
+
+  // Handle edit table
+  const handleEditTable = () => {
+    const updateTableData = { ...currentTable, ...formData };
+    updateTable(updateTableData, currentTable._id)
+      .then((res) => {
+        console.log(res);
+
+        // Fetch the updated list from the database
+        return getTables(); // Assuming this fetches all tables
+      })
+      .then((response) => {
+        setTables(response.data.data); // Update state with fresh data
         setShowEditModal(false);
-      };
-      
-      // Handle delete table
-      const handleDeleteTable = () => {
-        const updatedTables = tables.filter(table => table.id !== currentTable.id);
-        setTables(updatedTables);
+        toast.success("Table updated successfully");
+      })
+      .catch((err) => {
+        console.log(err);
+        toast.error(err.response?.data?.error || "Failed to update table");
+      });
+  };
+
+  // Handle delete table
+  const handleDeleteTable = () => {
+    deleteTable(currentTable._id)
+      .then((res) => {
+        console.log(res);
+        return getTables();
+      })
+      .then((response) => {
+        console.log(response);
+        toast.success("Table deletted successfully");
+        setTables(response.data.data);
         setShowDeleteModal(false);
-      };
-      
-      // Open edit modal with current table data
-      const openEditModal = (table) => {
-        setCurrentTable(table);
-        setFormData({
-          name: table.name,
-          capacity: table.capacity,
-          status: table.status,
-          location: table.location
-        });
-        setShowEditModal(true);
-      };
-      
-      // Open delete modal with current table
-      const openDeleteModal = (table) => {
-        setCurrentTable(table);
-        setShowDeleteModal(true);
-      };
-      
-      // Filter tables based on search term
-      const filteredTables = tables.filter(table => 
-        table.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        table.location.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    
-      // Status badge color
-      const getStatusColor = (status) => {
-        switch(status) {
-          case "Available": return "bg-green-100 text-green-800";
-          case "Occupied": return "bg-red-100 text-red-800";
-          case "Reserved": return "bg-yellow-100 text-yellow-800";
-          default: return "bg-gray-100 text-gray-800";
-        }
-      };
+      })
+      .catch((err) => {
+        console.log(err);
+        toast.error(err.response.data.error);
+      });
+  };
+
+  // Open edit modal with current table data
+  const openEditModal = (table) => {
+    setCurrentTable(table);
+    setFormData({
+      name: table.name,
+      capacity: table.capacity,
+      status: table.status,
+    });
+    setShowEditModal(true);
+  };
+
+  // Open delete modal with current table
+  const openDeleteModal = (table) => {
+    setCurrentTable(table);
+    setShowDeleteModal(true);
+  };
+
+  // Filter tables based on search term
+  const filteredTables = tables?.filter((table) => {
+    const tableName = table.name ? table.name.toLowerCase() : "";
+    const tableStatus = table.status ? table.status.toLowerCase() : "";
+
+    return (
+      tableName.includes(searchTerm.toLowerCase()) ||
+      tableStatus.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  });
+
+  // Status badge color
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "available":
+        return "bg-green-100 text-green-800";
+      case "occupied":
+        return "bg-red-100 text-red-800";
+      case "reserved":
+        return "bg-yellow-100 text-yellow-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
   return (
     <div className="h-full">
       {/* Header with search and add button */}
@@ -134,18 +182,12 @@ const ManageTable = () => {
                 <th scope="col" className="px-6 py-3">
                   Status
                 </th>
-                <th scope="col" className="px-6 py-3">
-                  Location
-                </th>
-                <th scope="col" className="px-6 py-3">
-                  Actions
-                </th>
               </tr>
             </thead>
             <tbody>
               {filteredTables.map((table) => (
                 <tr
-                  key={table.id}
+                  key={table._id}
                   className="bg-white border-b hover:bg-gray-50"
                 >
                   <td className="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
@@ -161,7 +203,6 @@ const ManageTable = () => {
                       {table.status}
                     </span>
                   </td>
-                  <td className="px-6 py-4">{table.location}</td>
                   <td className="px-6 py-4 flex items-center space-x-3">
                     <button
                       onClick={() => openEditModal(table)}
@@ -203,7 +244,7 @@ const ManageTable = () => {
               </h3>
             </div>
             <div className="px-6 py-4">
-              <div className="mb-4">
+              {/* <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Table Name
                 </label>
@@ -216,7 +257,7 @@ const ManageTable = () => {
                   placeholder="Table Name"
                   required
                 />
-              </div>
+              </div> */}
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Capacity
@@ -241,24 +282,9 @@ const ManageTable = () => {
                   onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                 >
-                  <option value="Available">Available</option>
-                  <option value="Occupied">Occupied</option>
-                  <option value="Reserved">Reserved</option>
-                </select>
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Location
-                </label>
-                <select
-                  name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-                >
-                  <option value="Main Floor">Main Floor</option>
-                  <option value="Patio">Patio</option>
-                  <option value="Private Room">Private Room</option>
+                  <option value="available">Available</option>
+                  <option value="occupied">Occupied</option>
+                  <option value="reserved">Reserved</option>
                 </select>
               </div>
             </div>
@@ -326,24 +352,9 @@ const ManageTable = () => {
                   onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                 >
-                  <option value="Available">Available</option>
-                  <option value="Occupied">Occupied</option>
-                  <option value="Reserved">Reserved</option>
-                </select>
-              </div>
-              <div className="mb-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Location
-                </label>
-                <select
-                  name="location"
-                  value={formData.location}
-                  onChange={handleInputChange}
-                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
-                >
-                  <option value="Main Floor">Main Floor</option>
-                  <option value="Patio">Patio</option>
-                  <option value="Private Room">Private Room</option>
+                  <option value="available">Available</option>
+                  <option value="occupied">Occupied</option>
+                  <option value="reserved">Reserved</option>
                 </select>
               </div>
             </div>

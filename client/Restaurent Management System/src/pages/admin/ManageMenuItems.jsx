@@ -8,11 +8,15 @@ import {
   FiTag,
   FiInfo,
 } from "react-icons/fi";
-import { addMenuItems, deleteMenuItem, getMenuItems, updateMenuItem } from "../../services/menuServices";
+import {
+  addMenuItems,
+  deleteMenuItem,
+  getMenuItems,
+  updateMenuItem,
+} from "../../services/menuServices";
 import { toast } from "react-toastify";
 
 const ManageMenuItems = () => {
-
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
 
@@ -52,56 +56,76 @@ const ManageMenuItems = () => {
       ...formData,
       price: parseFloat(formData.price),
     };
-    addMenuItems(newItem).then(res=>{
+    addMenuItems(newItem)
+      .then((res) => {
         console.log(res);
-        toast.success("Menu item added successfully")
-    }).catch(err=>{
+        toast.success("Menu item added successfully");
+        return getMenuItems();
+      })
+      .then((response) => {
+        console.log(response);
+        setMenuItems(response.data);
+        setShowAddModal(false);
+        setFormData({
+          name: "",
+          price: "",
+          category: "",
+          description: "",
+          image: null,
+          isAvailable: true,
+        });
+      })
+      .catch((err) => {
         console.log(err);
-        toast.error(err.response.data.error)
-    })
-    setShowAddModal(false);
-    setFormData({
-      name: "",
-      price: "",
-      category: "",
-      description: "",
-      image: null,
-      isAvailable: true,
-    });
+        toast.error(err.response.data.error);
+      });
   };
 
   // Handle edit menu item
   const handleEditMenuItem = () => {
     // Create updated item with new values
-  const updatedItem = {
-    ...currentItem, // Keep existing properties
-    name: formData.name,
-    price: parseFloat(formData.price),
-    category: formData.category,
-    description: formData.description,
-    availability: formData.isAvailable ? "in-stock" : "out-of-stock", // Ensure correct format
-  };
+    const updatedItem = {
+      ...currentItem, // Keep existing properties
+      name: formData.name,
+      price: parseFloat(formData.price),
+      category: formData.category,
+      description: formData.description,
+      availability: formData.isAvailable ? "in-stock" : "out-of-stock", // Ensure correct format
+    };
 
-    updateMenuItem(updatedItem,currentItem._id).then(res=>{
+    updateMenuItem(updatedItem, currentItem._id)
+      .then((res) => {
         console.log(res);
-        toast.success(`${res.data.data.name} updated successfully`)
-    }).catch(err=>{
+        toast.success(`${res.data.data.name} updated successfully`);
+        return getMenuItems();
+      })
+      .then((response) => {
+        console.log(response);
+        setMenuItems(response.data);
+        setShowEditModal(false);
+      })
+      .catch((err) => {
         console.log(err);
-        toast.error(err.response.data.error)
-    })
-
-    setShowEditModal(false);
+        toast.error(err.response.data.error);
+      });
   };
 
   // Handle delete menu item
   const handleDeleteMenuItem = () => {
-    deleteMenuItem(currentItem._id).then(res=>{
+    deleteMenuItem(currentItem._id)
+      .then((res) => {
         console.log(res);
-        toast.success("Menu item deletted successfully")
-    }).catch(err=>{
+        toast.success("Menu item deletted successfully");
+        return getMenuItems();
+      })
+      .then((response) => {
+        console.log(response);
+        setMenuItems(response.data);
+      })
+      .catch((err) => {
         console.log(err);
-        toast.error(err.response.data.error)
-    })
+        toast.error(err.response.data.error);
+      });
 
     setShowDeleteModal(false);
   };
@@ -127,7 +151,7 @@ const ManageMenuItems = () => {
   };
 
   // Filter menu items based on search term and category
-  const filteredItems = menuItems.filter((item) => {
+  const filteredItems = menuItems?.filter((item) => {
     const matchesSearch =
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.description &&
@@ -193,7 +217,7 @@ const ManageMenuItems = () => {
 
       {/* Menu items grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredItems.map((item) => (
+        {filteredItems?.map((item) => (
           <div
             key={item._id}
             className="bg-white rounded-lg shadow overflow-hidden"
@@ -253,7 +277,7 @@ const ManageMenuItems = () => {
             </div>
           </div>
         ))}
-        {filteredItems.length === 0 && (
+        {filteredItems?.length === 0 && (
           <div className="col-span-full bg-white rounded-lg shadow p-6 text-center text-gray-500">
             No menu items found
           </div>
@@ -315,12 +339,11 @@ const ManageMenuItems = () => {
                   onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                 >
-                  {categories
-                    .map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
+                  {categories?.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="mb-4">
@@ -432,12 +455,11 @@ const ManageMenuItems = () => {
                   onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                 >
-                  {categories
-                    .map((category) => (
-                      <option key={category} value={category}>
-                        {category}
-                      </option>
-                    ))}
+                  {categories?.map((category) => (
+                    <option key={category} value={category}>
+                      {category}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="mb-4">
@@ -498,7 +520,7 @@ const ManageMenuItems = () => {
             </div>
             <div className="px-6 py-4">
               <p className="text-gray-700">
-                Are you sure you want to delete "{currentItem?.name}"?
+                Are you sure you want to delete "{currentItem ?.name}"?
               </p>
             </div>
             <div className="px-6 py-4 border-t bg-gray-50 flex justify-end space-x-3">
