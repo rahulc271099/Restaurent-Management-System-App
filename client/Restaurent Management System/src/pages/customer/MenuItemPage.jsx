@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { getMenuItems } from "../../services/menuServices";
+import { addToCart, getCart } from "../../services/cartServices";
+import { toast } from "react-toastify";
 
 const MenuItemPage = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -21,6 +23,22 @@ const MenuItemPage = () => {
         console.log(err);
       });
   }, [filters]);
+
+  const handleAddToCart = (item) =>{
+    addToCart({
+      menuItemId: item._id,
+      name: item.name,
+      image: item.image,
+      price: item.price, // Optional, if needed
+      quantity: 1, // Default quantity when adding
+    }).then(res=>{
+      console.log(res);
+      toast.success("Item added to cart successfully")
+    })
+    .catch(err=>{
+      console.log(err);
+    })
+  }
 
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -212,7 +230,7 @@ const MenuItemPage = () => {
                         )}
                       </div>
 
-                      <button className="bg-orange-500 text-white p-2 rounded-full hover:bg-orange-600 transition duration-300">
+                      <button onClick={()=>{handleAddToCart(item)}} className="bg-orange-500 text-white p-2 rounded-full hover:bg-orange-600 transition duration-300">
                         <svg
                           xmlns="http://www.w3.org/2000/svg"
                           className="h-5 w-5"

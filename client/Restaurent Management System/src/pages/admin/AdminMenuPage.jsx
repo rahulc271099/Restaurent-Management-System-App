@@ -86,7 +86,7 @@ const AdminMenuPage = () => {
       id: "reservations",
       label: "Manage Reservations",
       icon: <FiCalendar size={20} />,
-      path: "/admin/reservations",
+      path: "/admin/menu/manageReservations",
     },
     {
       id: "reports",

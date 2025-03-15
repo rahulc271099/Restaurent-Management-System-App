@@ -13,6 +13,8 @@ import ManageTable from "../pages/admin/ManageTable";
 import ManageStaff from "../pages/admin/ManageStaff";
 import ManageMenuItems from "../pages/admin/ManageMenuItems";
 import ManageOrders from "../pages/admin/ManageOrders";
+import ManageReservations from "../pages/admin/ManageReservation";
+import CartPage from "../pages/customer/CartPage";
 
 export const router = createBrowserRouter([
   {
@@ -48,6 +50,10 @@ export const router = createBrowserRouter([
         path:"reservation",
         element: <ReservationPage/>,
       },
+      {
+        path:"cart",
+        element: <CartPage/>,
+      },
     ],
   },
   {
@@ -69,7 +75,8 @@ export const router = createBrowserRouter([
           { path: "manageTables", element: <ManageTable /> },
           { path: "manageStaffs", element: <ManageStaff /> },
           {path: "manageMenuItems", element: <ManageMenuItems/> },
-          {path: "manageOrders",element: <ManageOrders/>}
+          {path: "manageOrders",element: <ManageOrders/>},
+          {path: "manageReservations",element: <ManageReservations/>}
         ],
       },
     ],
