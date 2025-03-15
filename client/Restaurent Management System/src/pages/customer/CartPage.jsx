@@ -37,13 +37,13 @@ const CartPage = () => {
   const [orderType, setOrderType] = useState("delivery");
 
   // Calculate totals
-  //   const subtotal = cartItems.reduce(
-  //     (sum, item) => sum + item.price * item.quantity,
-  //     0
-  //   );
-  //   const deliveryFee = orderType === "delivery" ? 3.99 : 0;
-  //   const tax = subtotal * 0.07;
-  //   const total = subtotal + deliveryFee + tax;
+    const subtotal = cartItems ?.reduce(
+      (sum, item) => sum + item.price * item.quantity,
+      0
+    );
+    const deliveryFee = orderType === "delivery" ? 3.99 : 0;
+    const tax = subtotal * 0.07;
+    const total = subtotal + deliveryFee + tax;
 
   const handleQuantityChange = (id, newQuantity) => {
     if (newQuantity < 1) return;
@@ -86,7 +86,7 @@ const CartPage = () => {
   }
 
   const handleCheckout = () => {
-    navigate("/customer/order");
+    navigate("/customer/order", {state:{orderType}});
   };
 
   useEffect(() => {
@@ -298,22 +298,22 @@ const CartPage = () => {
                   <div className="divide-y divide-gray-200">
                     <div className="py-4 flex justify-between">
                       <p className="text-gray-600">Subtotal</p>
-                      {/* <p className="font-medium">${subtotal.toFixed(2)}</p> */}
+                      <p className="font-medium">${subtotal.toFixed(2)}</p>
                     </div>
                     {orderType === "delivery" && (
                       <div className="py-4 flex justify-between">
                         <p className="text-gray-600">Delivery Fee</p>
-                        {/* <p className="font-medium">${deliveryFee.toFixed(2)}</p> */}
+                        <p className="font-medium">${deliveryFee.toFixed(2)}</p>
                       </div>
                     )}
                     <div className="py-4 flex justify-between">
                       <p className="text-gray-600">Tax</p>
-                      {/* <p className="font-medium">${tax.toFixed(2)}</p> */}
+                      <p className="font-medium">${tax.toFixed(2)}</p>
                     </div>
                     <div className="py-4 flex justify-between">
                       <p className="text-lg font-semibold">Total</p>
                       <p className="text-lg font-semibold text-amber-600">
-                        {/* ${total.toFixed(2)} */}
+                        ${total.toFixed(2)}
                       </p>
                     </div>
                   </div>

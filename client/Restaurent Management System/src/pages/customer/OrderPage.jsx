@@ -1,39 +1,16 @@
-import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import { getCart } from "../../services/cartServices";
 
 const OrderPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
 
-  // This would be replaced with actual data from your backend
-  const [cartItems, setCartItems] = useState([
-    {
-      id: 1,
-      name: "Margherita Pizza",
-      description: "Classic cheese and tomato sauce",
-      price: 12.99,
-      quantity: 2,
-      image: "/api/placeholder/80/80",
-    },
-    {
-      id: 2,
-      name: "Chicken Alfredo Pasta",
-      description: "Creamy pasta with grilled chicken",
-      price: 14.99,
-      quantity: 1,
-      image: "/api/placeholder/80/80",
-    },
-    {
-      id: 3,
-      name: "Caesar Salad",
-      description: "Fresh romaine lettuce with Caesar dressing",
-      price: 8.99,
-      quantity: 1,
-      image: "/api/placeholder/80/80",
-    },
-  ]);
+  const initialOrderType = location.state?.orderType || "delivery";
 
-  const [orderType, setOrderType] = useState("delivery");
+  const [cartItems, setCartItems] = useState([]);
+  const [orderType, setOrderType] = useState(initialOrderType);
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [deliveryAddress, setDeliveryAddress] = useState({
     street: "",
@@ -78,6 +55,17 @@ const OrderPage = () => {
     setOrderType(type);
   };
 
+  useEffect(() => {
+    getCart()
+      .then((res) => {
+        console.log(res);
+        setCartItems(res.data.items);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
+
   return (
     <div className="pt-20 min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -102,7 +90,7 @@ const OrderPage = () => {
                     value={contactInfo.name}
                     onChange={(e) => handleInputChange(e, "contact")}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500"
-                    placeholder="John Doe"
+                    placeholder="Name"
                   />
                 </div>
                 <div>
@@ -128,7 +116,7 @@ const OrderPage = () => {
                     value={contactInfo.email}
                     onChange={(e) => handleInputChange(e, "contact")}
                     className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500"
-                    placeholder="johndoe@example.com"
+                    placeholder="name@gmail.com"
                   />
                 </div>
               </div>
@@ -386,12 +374,12 @@ const OrderPage = () => {
             </div>
 
             {/* Right Column - Order Summary */}
-            <div className="lg:w-1/3 bg-white rounded-2xl shadow-md p-6">
+            <div className="lg:w-1/2 bg-white rounded-2xl shadow-md p-6">
               <h2 className="text-lg font-semibold mb-4">Order Summary</h2>
               <div className="space-y-4">
-                {cartItems.map((item) => (
+                {cartItems?.map((item) => (
                   <div
-                    key={item.id}
+                    key={item._id}
                     className="flex items-center justify-between"
                   >
                     <div className="flex items-center space-x-4">

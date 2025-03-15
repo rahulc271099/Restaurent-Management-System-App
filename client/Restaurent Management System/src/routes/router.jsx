@@ -15,6 +15,7 @@ import ManageMenuItems from "../pages/admin/ManageMenuItems";
 import ManageOrders from "../pages/admin/ManageOrders";
 import ManageReservations from "../pages/admin/ManageReservation";
 import CartPage from "../pages/customer/CartPage";
+import OrderPage from "../pages/customer/OrderPage";
 
 export const router = createBrowserRouter([
   {
@@ -53,6 +54,10 @@ export const router = createBrowserRouter([
       {
         path:"cart",
         element: <CartPage/>,
+      },
+      {
+        path:"order",
+        element: <OrderPage/>,
       },
     ],
   },
