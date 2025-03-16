@@ -16,6 +16,8 @@ const ReservationPage = () => {
     reservation_date: "",
     party_number: "",
     menu_items: [],
+    occassion: "",
+    special_request: "",
   });
 
   const handleChange = (e) => {
@@ -56,12 +58,20 @@ const ReservationPage = () => {
     })
       .then((res) => {
         toast.success("Table reserved successfully");
+
+        // ✅ Update table status in the backend
         updateTable(selectedTable, { status: "reserved" })
-          .then((res) => {
-            console.log(res);
+          .then(() => {
+            console.log("Table status updated.");
+
+            // ✅ Fetch updated table status from backend & update UI
+            return getTables().then((response) => {
+              console.log(response);
+              setTables(response.data.data);
+            });
           })
           .catch((err) => {
-            console.log(err);
+            console.log("Error updating table status:", err);
           });
         //Reset fields
         setData((prevData) => ({
@@ -70,7 +80,8 @@ const ReservationPage = () => {
           reservation_time: "",
           reservation_date: "",
           party_number: "",
-          special_requests: "",
+          occassion: "",
+          special_request: "",
           menu_items: [],
         }));
         setSelectedTable(null);
@@ -83,43 +94,50 @@ const ReservationPage = () => {
       });
   };
 
-  //add menu item
-  const addItem = (itemId) => {
-    setSelectedMenuItems((prevSelected = []) => {
-      const existingItem = prevSelected.find((item) => item.itemId === itemId);
-      if (existingItem) {
-        //increase the count if item already exists
-        return prevSelected.map((item) =>
-          item.itemId === itemId
-            ? { ...item, quantity: item.quantity + 1 }
-            : item
-        );
-      } else {
-        // Add new item with quantity 1
-        return [...prevSelected, { itemId, quantity: 1 }];
+  // Add menu item
+  const addItem = (menuItemId) => {
+    console.log("Clicked item:", menuItemId); // Debugging log
+    setSelectedMenuItems((prevSelected) => {
+      const updatedItems = prevSelected.map((item) =>
+        item.menuItemId === menuItemId
+          ? { ...item, quantity: item.quantity + 1 } // Create a new object instead of mutating
+          : item
+      );
+  
+      // If the item is not found, add it to the array
+      if (!prevSelected.some((item) => item.menuItemId === menuItemId)) {
+        updatedItems.push({ menuItemId, quantity: 1 });
       }
+  
+      console.log("Updated items:", updatedItems);
+      return updatedItems; // Return a new array reference
     });
   };
 
-  //remove menu item
-  const removeItem = (itemId) => {
-    setSelectedMenuItems((prevSelected = []) => {
-      const existingItem = prevSelected.find((item) => item.itemId === itemId);
-      if (!existingItem) {
-        return prevSelected;
-      }
+  // Remove menu item
+  const removeItem = (menuItemId) => {
+    setSelectedMenuItems((prevSelected) => {
+      let updatedItems = [...(prevSelected || [])]; // Ensure array
+      const existingItem = updatedItems.find(
+        (item) => item.menuItemId === menuItemId
+      );
+
+      if (!existingItem) return updatedItems;
 
       if (existingItem.quantity === 1) {
-        // Remove item if quantity is 1
-        return prevSelected.filter((item) => item.itemId !== itemId);
+        updatedItems = updatedItems.filter(
+          (item) => item.menuItemId !== menuItemId
+        );
       } else {
-        // Decrease quantity by 1
-        return prevSelected.map((item) =>
-          item.itemId === itemId
+        updatedItems = updatedItems.map((item) =>
+          item.menuItemId === menuItemId
             ? { ...item, quantity: item.quantity - 1 }
             : item
         );
       }
+
+      console.log("Updated items after removal:", updatedItems);
+      return updatedItems;
     });
   };
 
@@ -212,9 +230,9 @@ const ReservationPage = () => {
                 Pre-order Menu Items (Optional)
               </h3>
               <div className="space-y-4">
-                {menuItems.map((item) => {
+                {menuItems?.map((item) => {
                   const selectedItem =
-                    selectedMenuItems?.find((i) => i.itemId === item._id) ||
+                    selectedMenuItems ?.find((i) => i.menuItemId === item._id) ||
                     null;
                   return (
                     <div
@@ -358,10 +376,26 @@ const ReservationPage = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-400 mb-1">
+                    Occassion
+                  </label>
+                  <textarea
+                    name="occassion"
+                    value={data.occassion}
+                    onChange={handleChange}
+                    className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    rows={3}
+                    placeholder="Occassion"
+                  ></textarea>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">
                     Special Requests
                   </label>
                   <textarea
-                    name="special_requests"
+                    name="special_request"
+                    value={data.special_request}
+                    onChange={handleChange}
                     className="w-full bg-slate-700 border border-slate-600 rounded-md py-2 px-3 text-white focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     rows={3}
                     placeholder="Any special requests or notes"

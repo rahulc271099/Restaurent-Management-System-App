@@ -9,7 +9,7 @@ export const getTables = () =>{
     return axiosInstance.get('/table/getTables')
 }
 
-export const updateTable = (updateData,tableId) =>{
+export const updateTable = (tableId,updateData) =>{
     return axiosInstance.put(`/table/updateTable/${tableId}`, updateData)
 }
 

@@ -149,6 +149,13 @@ const Header = () => {
 
               <button
                 type="button"
+                onClick={() => navigate("/customer/reservationManagement")}
+                className="inline-flex items-center px-5 py-2.5 text-sm font-medium rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white shadow-md transition-all duration-300 hover:shadow-amber-400/20 hover:translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
+              >
+                Reservations
+              </button>
+              <button
+                type="button"
                 onClick={() => navigate("/customer/reservation")}
                 className="inline-flex items-center px-5 py-2.5 text-sm font-medium rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white shadow-md transition-all duration-300 hover:shadow-amber-400/20 hover:translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
               >

@@ -4,10 +4,12 @@ const userDB = require("../Models/userModel");
 
 const createReservation = async (req, res) => {
   try {
-    const { table_id, reservation_time, status, menu_items, party_number } = req.body;
+    const { table_id, reservation_time, status, menu_items, party_number, occassion, special_request} =
+      req.body;
     if (!table_id || !reservation_time || !party_number) {
       return res.status(404).json({
-        error: "Table id, reservation time are required and party number required",
+        error:
+          "Table id, reservation time are required and party number required",
       });
     }
     let customer_name;
@@ -46,6 +48,8 @@ const createReservation = async (req, res) => {
       party_number,
       status: status || "confirmed", // Defaults to "confirmed" if not provided
       menu_items,
+      occassion,
+      special_request,
     });
 
     const savedReservation = await newReservation.save();
@@ -62,20 +66,65 @@ const createReservation = async (req, res) => {
   }
 };
 
+// const getReservationDetails = async (req, res) => {
+//   try {
+//     const reservations = await reservationDB.find();
+//     if (reservations.length === 0) {
+//       return res.status(404).json({
+//         error: "No reservations found",
+//       });
+//     }
+//     res.status(200).json({
+//       success: true,
+//       data: reservations,
+//     });
+//   } catch (error) {
+//     console.log(error);
+//     res.status(500).json({
+//       success: false,
+//       error: "Internal server error",
+//     });
+//   }
+// };
+
 const getReservationDetails = async (req, res) => {
   try {
-    const reservations = await reservationDB.find();
-    if (reservations.length === 0) {
+    const { customer_name } = req.query; // Get customer name if provided
+    const user_id = req.user.id; // Logged-in user ID
+    const user_role = req.user.role; // Assuming role is available in req.user
+
+    let filter = {};
+
+    if (user_role === "customer") {
+      // Customers can only fetch their own reservations
+      filter.user_id = user_id;
+    } else if (user_role === "staff") {
+      if (customer_name) {
+        // Staff can search by customer name
+        filter.customer_name = { $regex: new RegExp(customer_name, "i") };
+      } else {
+        // If no customer name is given, staff sees only reservations they created
+        filter.user_id = user_id;
+      }
+    }
+
+    const reservations = await reservationDB
+      .find(filter)
+      .populate("table_id")
+      .populate("menu_items.menuItemId");
+
+    if (!reservations.length) {
       return res.status(404).json({
         error: "No reservations found",
       });
     }
+
     res.status(200).json({
       success: true,
       data: reservations,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({
       success: false,
       error: "Internal server error",
@@ -107,6 +156,7 @@ const getOneReservation = async (req, res) => {
 const updateReservation = async (req, res) => {
   try {
     const { reservationId } = req.params;
+    const {reservation_time,party_number,status,menu_items,occassion,special_request} = req.body
     const reservation = await reservationDB.findById(reservationId);
     if (!reservation) {
       return res.status(404).json({
@@ -114,7 +164,7 @@ const updateReservation = async (req, res) => {
       });
     }
     const updatedReservation = await reservationDB.findByIdAndUpdate(
-      reservationId
+      reservationId,{reservation_time,party_number,status,menu_items,occassion,special_request}
     );
     res.status(200).json({
       success: true,

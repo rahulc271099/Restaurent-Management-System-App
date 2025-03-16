@@ -5,33 +5,6 @@ import { clearCart, deleteCart, getCart } from "../../services/cartServices";
 
 const CartPage = () => {
   const navigate = useNavigate();
-  // This would be replaced with actual data from your backend
-  //   const [cartItems, setCartItems] = useState([
-  //     {
-  //       id: 1,
-  //       name: "Margherita Pizza",
-  //       description: "Classic cheese and tomato sauce",
-  //       price: 12.99,
-  //       quantity: 2,
-  //       image: "/api/placeholder/80/80",
-  //     },
-  //     {
-  //       id: 2,
-  //       name: "Chicken Alfredo Pasta",
-  //       description: "Creamy pasta with grilled chicken",
-  //       price: 14.99,
-  //       quantity: 1,
-  //       image: "/api/placeholder/80/80",
-  //     },
-  //     {
-  //       id: 3,
-  //       name: "Caesar Salad",
-  //       description: "Fresh romaine lettuce with Caesar dressing",
-  //       price: 8.99,
-  //       quantity: 1,
-  //       image: "/api/placeholder/80/80",
-  //     },
-  //   ]);
 
   const [cartItems, setCartItems] = useState([]);
   const [orderType, setOrderType] = useState("delivery");
