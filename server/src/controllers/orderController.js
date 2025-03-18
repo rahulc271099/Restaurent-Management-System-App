@@ -3,8 +3,10 @@ const orderDB = require("../Models/orderModel");
 
 const createOrder = async (req, res) => {
   try {
-    const { user_id, order_type, table_id, total_amount, order_items } =
-      req.body;
+    const user_id = req.user.id;
+    console.log("Received user_id:", req.user?.id);
+    console.log("Received body:", req.body);
+    const { order_type, table_id, total_amount, order_items } = req.body;
 
     if (
       !user_id ||
@@ -16,37 +18,36 @@ const createOrder = async (req, res) => {
       return res.status(400).json({ error: "Missing required order fields" });
     }
 
+    const orderItemIds = order_items.map((item) => item.item_id);
+
     // Create the order document. Initially, order_items will be an empty array.
     const order = new orderDB({
       user_id,
       order_type,
       table_id: order_type === "dine-in" ? table_id : undefined,
       total_amount,
-      order_items: [],
+      order_items: orderItemIds,
     });
 
     const savedOrder = await order.save();
 
     // Create order items documents for each item provided
-    const orderItemIds = [];
     for (const item of order_items) {
       if (!item.item_id || !item.quantity || !item.price) {
         return res.status(400).json({
           error: "Each order item must have item_id, quantity, and price",
         });
       }
-      const orderItem = new orderDB({
+      const orderItem = new orderItemDB({
         order_id: savedOrder._id,
         item_id: item.item_id,
         quantity: item.quantity,
         price: item.price,
       });
       const savedOrderItem = await orderItem.save();
-      orderItemIds.push(savedOrderItem._id);
     }
 
     // Update the order with the array of created order item IDs.
-    savedOrder.order_items = orderItemIds;
     const updatedOrder = await savedOrder.save();
 
     return res.status(201).json({
@@ -61,11 +62,10 @@ const createOrder = async (req, res) => {
 
 const getOrders = async (req, res) => {
   try {
-    const orders = await orderDB.find();
-    if (orders.length === 0) {
-      return res.status(403).json({
-        error: "No orders found",
-      });
+    const user_id = req.user.id;
+    const orders = await orderDB.find({ user_id }).lean(); // Convert to plain JSON
+    for (let order of orders) {
+      order.order_items = await orderItemDB.find({ order_id: order._id }).populate("item_id", "name price");
     }
     res.status(200).json({
       success: true,
@@ -166,9 +166,57 @@ const updateOrderItems = async (req, res) => {
   }
 };
 
+const getOrderItems = async (req, res) => {
+  try {
+    const {orderId} = req.params;
+    const orderItems = await orderItemDB.find({ order_id:orderId });
+    res.status(200).json({
+      success: true,
+      data: orderItems,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+
+const deleteOrderItem = async(req,res) =>{
+  try {
+    const { orderId, orderItemId } = req.params; // Extract IDs from request parameters
+    console.log(orderId, orderItemId);
+    
+    // Find the order to ensure it exists
+    const order = await orderDB.findById(orderId);
+    if (!order) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+    
+    const orderItem = await orderItemDB.findOne({item_id:orderItemId})
+    if (!orderItem) {
+      return res.status(404).json({ error: "Order item not found" });
+    }
+    // Find and delete the order item
+    const delettedItem = await orderItemDB.findOneAndDelete({item_id:orderItemId});
+    
+
+    // Remove the order item reference from the order
+    await orderDB.findByIdAndUpdate(orderId, {
+      $pull: { order_items: orderItemId }
+    });
+
+    res.status(200).json({ success: true, message: "Order item deleted successfully" });
+
+  } catch (error) {
+    console.error("Error deleting order item:", error);
+    res.status(500).json({ error: "Internal server error" });
+  }
+}
+
 const deleteOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
+    console.log(orderId);
     const order = await orderDB.findById(orderId);
     if (!order) {
       return res.status(400).json({
@@ -190,7 +238,9 @@ module.exports = {
   createOrder,
   getOrders,
   getOneOrder,
+  getOrderItems,
   updateOrder,
   updateOrderItems,
+  deleteOrderItem,
   deleteOrder,
 };
