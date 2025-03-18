@@ -6,14 +6,14 @@ export const createReservation = (data) =>{
     return axiosInstance.post('/reservation/createReservation', data)
 }
 
-export const getReservation = () =>{
+export const getReservations = () =>{
     return axiosInstance.get('/reservation/getReservations')
 }
 
-export const updateReservation = () =>{
-    return axiosInstance.put('/reservation/updateReservation')
+export const updateReservation = (reservationId,updatedData) =>{
+    return axiosInstance.put(`/reservation/updateReservation/${reservationId}`, updatedData)
 }
 
-export const deleteReservation = () =>{
-    return axiosInstance.delete('/reservation/deleteReservation')
+export const deleteReservation = (reservationId) =>{
+    return axiosInstance.delete(`/reservation/removeReservation/${reservationId}`)
 }

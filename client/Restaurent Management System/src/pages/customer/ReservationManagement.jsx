@@ -2,10 +2,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import {
-  getReservation,
+  deleteReservation,
+  getReservations,
   updateReservation,
 } from "../../services/reservationServices";
 import { getMenuItems } from "../../services/menuServices";
+import { updateTable } from "../../services/tableServices";
 
 const ReservationManagement = () => {
   const navigate = useNavigate();
@@ -24,28 +26,28 @@ const ReservationManagement = () => {
     special_request: "",
   });
 
-  // Time slots for reservation
-  const timeSlots = [
-    "11:00",
-    "11:30",
-    "12:00",
-    "12:30",
-    "13:00",
-    "13:30",
-    "18:00",
-    "18:30",
-    "19:00",
-    "19:30",
-    "20:00",
-    "20:30",
-    "21:00",
-  ];
+  //   // Time slots for reservation
+  //   const timeSlots = [
+  //     "11:00",
+  //     "11:30",
+  //     "12:00",
+  //     "12:30",
+  //     "13:00",
+  //     "13:30",
+  //     "18:00",
+  //     "18:30",
+  //     "19:00",
+  //     "19:30",
+  //     "20:00",
+  //     "20:30",
+  //     "21:00",
+  //   ];
 
   // Simulating data fetching from backend
   useEffect(() => {
     setIsLoading(true);
     setTimeout(() => {
-      getReservation()
+      getReservations()
         .then((res) => {
           console.log(res);
           setReservations(res.data.data);
@@ -68,19 +70,116 @@ const ReservationManagement = () => {
       });
   }, []);
 
+  const handleUpdateReservation = (e) => {
+    e.preventDefault();
+
+    // setIsLoading(true);
+    // setTimeout(() => {
+    //   updateReservation(currentReservation._id, formData)
+    //     .then((res) => {
+    //       console.log(res);
+    //       return getReservation();
+    //     })
+    //     .then((response) => {
+    //       console.log(response);
+    //       toast.success("Reservation updated successfully");
+    //       setReservations(response.data.data)
+    //       setIsEditModalOpen(false);
+    //       setIsLoading(false);
+    //     })
+    //     .catch((err) => {
+    //       console.log(err);
+    //       toast.error(err.response.data.error);
+    //     });
+    // }, 1000);
+
+    updateReservation(currentReservation._id, formData)
+      .then((res) => {
+        console.log(res);
+        return getReservations();
+      })
+      .then((response) => {
+        console.log(response);
+        toast.success("Reservation updated successfully");
+        setReservations(response.data.data);
+        setIsEditModalOpen(false);
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        console.log(err);
+        toast.error(err.response.data.error);
+      });
+  };
+
+  //   const handleDeleteReservation = () => {
+  //     setIsLoading(true);
+  //     setTimeout(() => {
+  //       deleteReservation(currentReservation._id)
+  //         .then((res) => {
+  //           console.log(res);
+  //           toast.success("Reservation cancelled successfully");
+  //           return getReservations();
+  //         })
+  //         .then((response) => {
+  //           console.log(response);
+  //           setReservations(response.data.data)
+  //           setIsDeleteModalOpen(false);
+  //           setIsLoading(false);
+  //         });
+  //     }, 1000);
+  //   };
+
+  const handleDeleteReservation = () => {
+    console.log(currentReservation);
+    setIsLoading(true);
+    
+      deleteReservation(currentReservation._id)
+        .then((res) => {
+          console.log(res);
+          setIsDeleteModalOpen(false);
+          toast.success("Reservation deletted successfully");
+          return updateTable(currentReservation.table_id._id, {
+            status: "available",
+          });
+        })
+        .then(() => {
+          return getReservations();
+        })
+        .then((response) => {
+          console.log(response);
+          setReservations(response.data.data);
+          setIsLoading(false);
+        })
+        .catch(err=>{
+            console.log(err);
+        })
+  };
+
   const formatDateTime = (isoString) => {
     if (!isoString) return "";
     const date = new Date(isoString);
-    return date.toISOString().slice(0, 16); // Extract "YYYY-MM-DDTHH:MM"
+    // Convert to "YYYY-MM-DDTHH:MM" format (adjusting for local timezone)
+    return (
+      date.getFullYear() +
+      "-" +
+      String(date.getMonth() + 1).padStart(2, "0") +
+      "-" +
+      String(date.getDate()).padStart(2, "0") +
+      "T" +
+      String(date.getHours()).padStart(2, "0") +
+      ":" +
+      String(date.getMinutes()).padStart(2, "0")
+    );
   };
 
+  //   manage open edit modal
   const openEditModal = (reservation) => {
     console.log(reservation);
     setCurrentReservation(reservation);
     setFormData({
-      reservationTime: formatDateTime(reservation.reservation_time),
+      reservation_time: formatDateTime(reservation.reservation_time),
       party_number: reservation.party_number,
-      occasion: reservation.occassion,
+      occassion: reservation.occassion,
       special_request: reservation.special_request,
       menu_items: reservation.menu_items.map((item) => ({
         menuItemId: item.menuItemId || item._id, // Ensure correct mapping
@@ -91,6 +190,7 @@ const ReservationManagement = () => {
     setIsEditModalOpen(true);
   };
 
+  //   manage delete modal
   const openDeleteModal = (reservation) => {
     setCurrentReservation(reservation);
     setIsDeleteModalOpen(true);
@@ -104,77 +204,13 @@ const ReservationManagement = () => {
     });
   };
 
-  const handleUpdateReservation = async (e) => {
-    e.preventDefault();
-
-    // Validate form
-    if (!formData.reservation_time || !formData.party_number) {
-      toast.error("Please fill all required fields");
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      // Simulated API call
-      // In a real app, you would call your update API
-      // await updateReservation(currentReservation.id, formData);
-
-      // Simulate successful update
-      setTimeout(() => {
-        // Update local state
-        const updatedReservations = reservations.map((reservation) =>
-          reservation.id === currentReservation.id
-            ? { ...reservation, ...formData }
-            : reservation
-        );
-
-        setReservations(updatedReservations);
-        setIsEditModalOpen(false);
-        setIsLoading(false);
-        toast.success("Reservation updated successfully");
-      }, 1000);
-    } catch (error) {
-      console.error("Error updating reservation:", error);
-      toast.error("Failed to update reservation");
-      setIsLoading(false);
-    }
-  };
-
-  const handleDeleteReservation = async () => {
-    setIsLoading(true);
-
-    try {
-      // Simulated API call
-      // In a real app, you would call your delete API
-      // await deleteReservation(currentReservation.id);
-
-      // Simulate successful deletion
-      setTimeout(() => {
-        // Update local state
-        const updatedReservations = reservations.filter(
-          (reservation) => reservation.id !== currentReservation.id
-        );
-
-        setReservations(updatedReservations);
-        setIsDeleteModalOpen(false);
-        setIsLoading(false);
-        toast.success("Reservation cancelled successfully");
-      }, 1000);
-    } catch (error) {
-      console.error("Error deleting reservation:", error);
-      toast.error("Failed to cancel reservation");
-      setIsLoading(false);
-    }
-  };
-
   //menu item change
   const handleMenuItemChange = (menuItem) => {
     setFormData((prev) => {
       const existingItem = prev.menu_items.find(
         (item) => item.menuItemId._id === menuItem._id
       );
-  
+
       if (existingItem) {
         // Remove if already selected
         return {
@@ -187,15 +223,18 @@ const ReservationManagement = () => {
         // Add with full menuItem object
         return {
           ...prev,
-          menu_items: [...prev.menu_items, { menuItemId: menuItem, quantity: 1 }],
+          menu_items: [
+            ...prev.menu_items,
+            { menuItemId: menuItem, quantity: 1 },
+          ],
         };
       }
     });
   };
-  
+
   const handleMenuItemQuantityChange = (menuItem, newQuantity) => {
     const quantity = Math.max(1, Number(newQuantity)); // Ensure at least 1
-  
+
     setFormData((prevData) => ({
       ...prevData,
       menu_items: prevData.menu_items.map((item) =>
@@ -204,15 +243,15 @@ const ReservationManagement = () => {
     }));
   };
 
-  const formatDate = (dateString) => {
-    const options = {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    };
-    return new Date(dateString).toLocaleDateString(undefined, options);
-  };
+  //   const formatDate = (dateString) => {
+  //     const options = {
+  //       weekday: "long",
+  //       year: "numeric",
+  //       month: "long",
+  //       day: "numeric",
+  //     };
+  //     return new Date(dateString).toLocaleDateString(undefined, options);
+  //   };
 
   return (
     <div className="pt-20 min-h-screen bg-gray-50">
@@ -368,7 +407,7 @@ const ReservationManagement = () => {
             <span className="hidden sm:inline-block sm:align-middle sm:h-screen"></span>
             &#8203;
             <div className="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <form onSubmit={handleUpdateReservation}>
+              <form>
                 <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                   <div className="sm:flex sm:items-start">
                     <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-amber-100 sm:mx-0 sm:h-10 sm:w-10">
@@ -405,7 +444,12 @@ const ReservationManagement = () => {
                             name="reservation_time"
                             id="reservation_time"
                             value={formData.reservation_time}
-                            onChange={handleInputChange}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                reservation_time: e.target.value,
+                              })
+                            }
                             className="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-amber-500 focus:border-amber-500"
                             min={new Date().toISOString().slice(0, 16)}
                             required
@@ -476,7 +520,8 @@ const ReservationManagement = () => {
                           <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
                             {menuItems?.map((item) => {
                               const selectedItem = formData.menu_items?.find(
-                                (menuItem) => menuItem.menuItemId._id === item._id
+                                (menuItem) =>
+                                  menuItem.menuItemId._id === item._id
                               );
                               return (
                                 <div
@@ -519,7 +564,8 @@ const ReservationManagement = () => {
                   {/* Modal Footer */}
                   <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
                     <button
-                      type="submit"
+                      type="button"
+                      onClick={handleUpdateReservation}
                       className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-amber-600 text-base font-medium text-white hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 sm:ml-3 sm:w-auto sm:text-sm"
                     >
                       Save Changes

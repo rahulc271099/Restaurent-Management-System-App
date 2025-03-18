@@ -7,8 +7,8 @@ const reservationRouter = require('express').Router()
 reservationRouter.post('/createReservation', authRole('staff','customer'), createReservation)
 reservationRouter.get('/getReservations', authRole('customer','admin','staff'), getReservationDetails)
 reservationRouter.get('/getOneReserVation', authRole('admin','staff','customer'), getOneReservation)
-reservationRouter.put('/updateReservation', authRole('admin','staff','customer'), updateReservation)
-reservationRouter.delete('/removeReservation', authRole('admin','staff','customer'), deleteReservation)
+reservationRouter.put('/updateReservation/:reservationId', authRole('admin','staff','customer'), updateReservation)
+reservationRouter.delete('/removeReservation/:reservationId', authRole('admin','staff','customer'), deleteReservation)
 
 
 module.exports = reservationRouter
