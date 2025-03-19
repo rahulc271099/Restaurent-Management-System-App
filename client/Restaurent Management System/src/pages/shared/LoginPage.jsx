@@ -26,7 +26,7 @@ const LoginPage = () => {
         login(userData)
 
         // Redirect according to the user's role.
-        if (userData.role === "admin") {
+        if (userData.role === "admin" || userData.role === "staff") {
             navigate("/admin", { replace: true });
           } else if (userData.role === "staff") {
             navigate("/staff", { replace: true });

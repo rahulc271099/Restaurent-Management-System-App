@@ -17,7 +17,7 @@ const orderSchema = new mongoose.Schema({
       order_time: { type: Date, default: Date.now },
       status: {
         type: String,
-        enum: ["pending", "preparing", "delivered", "completed", "cancelled"],
+        enum: ["pending", "preparing", "out-to-delivery","delivered", "completed", "cancelled"],
         default: "pending",
       },
       order_type: {

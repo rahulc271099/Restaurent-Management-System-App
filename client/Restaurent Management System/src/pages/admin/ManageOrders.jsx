@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   FiPlus,
   FiEdit2,
@@ -10,43 +10,12 @@ import {
   FiPackage,
   FiClock,
 } from "react-icons/fi";
+import { getOrders, updateOrder } from "../../services/orderServices";
+import { getMenuItems } from "../../services/menuServices";
 
 const ManageOrders = () => {
-  const [orders, setOrders] = useState([
-    {
-      id: 1,
-      customer: "John Doe",
-      date: "2025-03-10",
-      total: 89.99,
-      items: 4,
-      status: "Delivered",
-    },
-    {
-      id: 2,
-      customer: "Jane Smith",
-      date: "2025-03-11",
-      total: 124.5,
-      items: 7,
-      status: "Processing",
-    },
-    {
-      id: 3,
-      customer: "Mike Johnson",
-      date: "2025-03-12",
-      total: 45.75,
-      items: 2,
-      status: "Pending",
-    },
-    {
-      id: 4,
-      customer: "Sarah Williams",
-      date: "2025-03-12",
-      total: 210.25,
-      items: 8,
-      status: "Shipped",
-    },
-  ]);
-
+  const [orders, setOrders] = useState([]);
+  const [menuItems,setMenuItems] = useState([])
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -57,15 +26,34 @@ const ManageOrders = () => {
     customer: "",
     date: new Date().toISOString().split("T")[0],
     items: 0,
+    menu_items:[],
+    quantity: 0,
+    table_id: "",
     total: 0,
     status: "Pending",
   });
 
-  // Handle form input changes
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
-  };
+  useEffect(() => {
+    getOrders()
+      .then((res) => {
+        console.log(res);
+        setOrders(res.data.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
+
+  useEffect(()=>{
+    getMenuItems().then(res=>{
+      console.log(res);
+      setMenuItems(res.data)
+    }).catch(err=>{
+      console.log(err);
+    })
+  },[])
+
+  
 
   // Handle order creation
   const handleAddOrder = () => {
@@ -90,19 +78,18 @@ const ManageOrders = () => {
 
   // Handle edit order
   const handleEditOrder = () => {
-    const updatedOrders = orders.map((o) =>
-      o.id === currentOrder.id
-        ? {
-            ...o,
-            customer: formData.customer,
-            date: formData.date,
-            total: parseFloat(formData.total),
-            items: parseInt(formData.items),
-            status: formData.status,
-          }
-        : o
-    );
-    setOrders(updatedOrders);
+    console.log(formData);
+    updateOrder(formData,currentOrder._id).then(res=>{
+      console.log(res);
+      return getOrders()
+    })
+    .then((response)=>{
+      console.log(response);
+      setOrders(response.data.data)
+    })
+    .catch(err=>{
+      console.log(err);
+    })
     setShowEditModal(false);
   };
 
@@ -117,10 +104,11 @@ const ManageOrders = () => {
   const openEditModal = (order) => {
     setCurrentOrder(order);
     setFormData({
-      customer: order.customer,
-      date: order.date,
-      total: order.total,
-      items: order.items,
+      customer: order.user_id.name,
+      date: new Date(order.order_time).toISOString().slice(0, 16),
+      total: order.total_amount,
+      items: order.order_items.length,
+      menu_items:order.order_items,
       status: order.status,
     });
     setShowEditModal(true);
@@ -133,11 +121,19 @@ const ManageOrders = () => {
   };
 
   // Filter orders based on search term
-  const filteredOrders = orders.filter(
-    (o) =>
-      o.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      o.status.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // const filteredOrders = orders ?.filter(
+  //   (o) =>
+  //     o.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //     o.status?.toLowerCase().includes(searchTerm.toLowerCase())
+  // );
+
+  const filteredOrders = Array.isArray(orders)
+  ? orders.filter(
+      (o) =>
+        o.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        o.status?.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  : [];
 
   // Status badge color
   const getStatusColor = (status) => {
@@ -155,6 +151,62 @@ const ManageOrders = () => {
       default:
         return "bg-gray-100 text-gray-800";
     }
+  };
+
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  //handle menu item change
+  const handleMenuItemChange = (item) => {
+    const existingItem = formData.menu_items.find(
+      (menuItem) => menuItem.item_id._id === item._id
+    );
+  
+    let updatedItems;
+    
+    if (existingItem) {
+      // Remove item if already selected
+      updatedItems = formData.menu_items.filter(
+        (menuItem) => menuItem.item_id._id !== item._id
+      );
+    } else {
+      // Add item with default quantity = 1
+      updatedItems = [
+        ...formData.menu_items,
+        { item_id: { ...item }, quantity: 1 },
+      ];
+    }
+  
+    // Calculate new total amount
+    const newTotal = updatedItems.reduce(
+      (sum, menuItem) => sum + menuItem.item_id.price * menuItem.quantity,
+      0
+    );
+  
+    setFormData({ ...formData, menu_items: updatedItems, total: newTotal });
+  };
+
+  //handle menu item quantity change
+  const handleMenuItemQuantityChange = (item, quantity) => {
+    let updatedItems = formData.menu_items.map((menuItem) =>
+      menuItem.item_id._id === item._id
+        ? { ...menuItem, quantity: parseInt(quantity, 10) }
+        : menuItem
+    );
+  
+    // Remove items if quantity is set to 0
+    updatedItems = updatedItems.filter((menuItem) => menuItem.quantity > 0);
+  
+    // Recalculate total amount
+    const newTotal = updatedItems.reduce(
+      (sum, menuItem) => sum + menuItem.item_id.price * menuItem.quantity,
+      0
+    );
+  
+    setFormData({ ...formData, menu_items: updatedItems, total: newTotal });
   };
 
   // Format currency
@@ -209,6 +261,12 @@ const ManageOrders = () => {
                   Items
                 </th>
                 <th scope="col" className="px-6 py-3">
+                  Table
+                </th>
+                <th scope="col" className="px-6 py-3">
+                  Order type
+                </th>
+                <th scope="col" className="px-6 py-3">
                   Total
                 </th>
                 <th scope="col" className="px-6 py-3">
@@ -222,34 +280,50 @@ const ManageOrders = () => {
             <tbody>
               {filteredOrders.map((order) => (
                 <tr
-                  key={order.id}
+                  key={order._id}
                   className="bg-white border-b hover:bg-gray-50"
                 >
                   <td className="px-6 py-4 font-medium text-gray-900">
-                    #{order.id.toString().padStart(4, "0")}
+                    #{order._id.toString().padStart(4, "0")}
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center">
                       <FiUser className="mr-2 text-gray-400" />
-                      {order.customer}
+                      {order.user_id.name}
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center">
                       <FiCalendar className="mr-2 text-gray-400" />
-                      {order.date}
+                      {/* {order.order_time} */}
+                      {new Date(order.order_time).toLocaleString()} •{" "}
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center">
                       <FiPackage className="mr-2 text-gray-400" />
-                      {order.items}
+                      {/* {order.items} */}
+                      {order.order_items
+                        .map((item) => item.item_id.name)
+                        .join(",")}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center whitespace-nowrap">
+                      <FiPackage className="mr-2 text-gray-400" />
+                      {order.table_id?.name}
+                    </div>
+                  </td>
+                  <td className="px-6 py-4">
+                    <div className="flex items-center whitespace-nowrap">
+                      <FiPackage className="mr-2 text-gray-400" />
+                      {order.order_type}
                     </div>
                   </td>
                   <td className="px-6 py-4">
                     <div className="flex items-center">
                       <FiDollarSign className="mr-1 text-gray-400" />
-                      {formatCurrency(order.total)}
+                      {formatCurrency(order.total_amount)}
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -262,18 +336,20 @@ const ManageOrders = () => {
                     </span>
                   </td>
                   <td className="px-6 py-4 flex items-center space-x-3">
-                    <button
-                      onClick={() => openEditModal(order)}
-                      className="font-medium text-blue-600 hover:text-blue-800"
-                    >
-                      <FiEdit2 size={18} />
-                    </button>
-                    <button
-                      onClick={() => openDeleteModal(order)}
-                      className="font-medium text-red-600 hover:text-red-800"
-                    >
-                      <FiTrash2 size={18} />
-                    </button>
+                    <div className="px-6 py-4 flex items-center justify-center space-x-3">
+                      <button
+                        onClick={() => openEditModal(order)}
+                        className="font-medium text-blue-600 hover:text-blue-800"
+                      >
+                        <FiEdit2 size={18} />
+                      </button>
+                      <button
+                        onClick={() => openDeleteModal(order)}
+                        className="font-medium text-red-600 hover:text-red-800"
+                      >
+                        <FiTrash2 size={18} />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -421,8 +497,8 @@ const ManageOrders = () => {
 
       {/* Edit Order Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4 overflow-auto">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-4 border-b">
               <h3 className="text-lg font-medium text-gray-900">Edit Order</h3>
             </div>
@@ -445,7 +521,7 @@ const ManageOrders = () => {
                   Order Date
                 </label>
                 <input
-                  type="date"
+                  type="datetime-local"
                   name="date"
                   value={formData.date}
                   onChange={handleInputChange}
@@ -492,12 +568,53 @@ const ManageOrders = () => {
                   onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                 >
-                  <option value="Pending">Pending</option>
-                  <option value="Processing">Processing</option>
-                  <option value="Shipped">Shipped</option>
-                  <option value="Delivered">Delivered</option>
-                  <option value="Cancelled">Cancelled</option>
+                  <option value="pending">Pending</option>
+                  <option value="preparing">Preparing</option>
+                  <option value="out-to-delivery">Out to delivery</option>
+                  <option value="delivered">Delivered</option>
+                  <option value="completed">Completed</option>
+                  <option value="cancelled">Cancelled</option>
                 </select>
+              </div>
+              {/* Menu Items Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Menu Items
+                </label>
+                <div className="mt-2 space-y-2 max-h-40 overflow-y-auto">
+                  {menuItems?.map((item) => {
+                    const selectedItem = formData.menu_items?.find(
+                      (menuItem) => menuItem.item_id._id === item._id
+                    );
+                    return (
+                      <div
+                        key={item._id}
+                        className="flex items-center justify-between border p-2 rounded-md"
+                      >
+                        <label className="flex items-center">
+                          <input
+                            type="checkbox"
+                            value={item._id}
+                            checked={!!selectedItem}
+                            onChange={() => handleMenuItemChange(item)}
+                            className="mr-2"
+                          />
+                          {item.name}-₹{item.price}
+                        </label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={selectedItem?.quantity || 0}
+                          onChange={(e) =>
+                            handleMenuItemQuantityChange(item, e.target.value)
+                          }
+                          className="w-16 border border-gray-300 rounded-md text-center"
+                          disabled={!selectedItem} // Disable if item is not selected
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             </div>
             <div className="px-6 py-4 border-t bg-gray-50 flex justify-end space-x-3">
@@ -551,4 +668,4 @@ const ManageOrders = () => {
   );
 };
 
-export default ManageOrders
+export default ManageOrders;

@@ -63,10 +63,35 @@ const createOrder = async (req, res) => {
 const getOrders = async (req, res) => {
   try {
     const user_id = req.user.id;
-    const orders = await orderDB.find({ user_id }).lean(); // Convert to plain JSON
-    for (let order of orders) {
-      order.order_items = await orderItemDB.find({ order_id: order._id }).populate("item_id", "name price");
+    // let orders = await orderDB.find({ user_id }).lean(); // Convert to plain JSON
+    // for (let order of orders) {
+    //   order.order_items = await orderItemDB
+    //     .find({ order_id: order._id })
+    //     .populate("item_id", "name price");
+    // }
+
+    // if (req.user.role === "admin") {
+    //   orders = await orderDB.find().populate("user_id", "_id name");
+    // }
+
+    let orders;
+    if (req.user.role === "admin") {
+      orders = await orderDB.find().populate("user_id", "_id name")
+      .populate("table_id", "_id name")
+      for (let order of orders) {
+        order.order_items = await orderItemDB
+          .find({ order_id: order._id })
+          .populate("item_id", "name price");
+      }
+    } else {
+      orders = await orderDB.find({ user_id }).lean(); // Convert to plain JSON
+      for (let order of orders) {
+        order.order_items = await orderItemDB
+          .find({ order_id: order._id })
+          .populate("item_id", "name price");
+      }
     }
+
     res.status(200).json({
       success: true,
       data: orders,
@@ -168,8 +193,8 @@ const updateOrderItems = async (req, res) => {
 
 const getOrderItems = async (req, res) => {
   try {
-    const {orderId} = req.params;
-    const orderItems = await orderItemDB.find({ order_id:orderId });
+    const { orderId } = req.params;
+    const orderItems = await orderItemDB.find({ order_id: orderId });
     res.status(200).json({
       success: true,
       data: orderItems,
@@ -181,37 +206,39 @@ const getOrderItems = async (req, res) => {
   }
 };
 
-const deleteOrderItem = async(req,res) =>{
+const deleteOrderItem = async (req, res) => {
   try {
     const { orderId, orderItemId } = req.params; // Extract IDs from request parameters
     console.log(orderId, orderItemId);
-    
+
     // Find the order to ensure it exists
     const order = await orderDB.findById(orderId);
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
     }
-    
-    const orderItem = await orderItemDB.findOne({item_id:orderItemId})
+
+    const orderItem = await orderItemDB.findOne({ item_id: orderItemId });
     if (!orderItem) {
       return res.status(404).json({ error: "Order item not found" });
     }
     // Find and delete the order item
-    const delettedItem = await orderItemDB.findOneAndDelete({item_id:orderItemId});
-    
+    const delettedItem = await orderItemDB.findOneAndDelete({
+      item_id: orderItemId,
+    });
 
     // Remove the order item reference from the order
     await orderDB.findByIdAndUpdate(orderId, {
-      $pull: { order_items: orderItemId }
+      $pull: { order_items: orderItemId },
     });
 
-    res.status(200).json({ success: true, message: "Order item deleted successfully" });
-
+    res
+      .status(200)
+      .json({ success: true, message: "Order item deleted successfully" });
   } catch (error) {
     console.error("Error deleting order item:", error);
     res.status(500).json({ error: "Internal server error" });
   }
-}
+};
 
 const deleteOrder = async (req, res) => {
   try {

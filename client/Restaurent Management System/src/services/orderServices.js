@@ -10,8 +10,8 @@ export const createOrder = (data) =>{
     return axiosInstance.post('/order/createOrder', data)
 }
 
-export const updateOrder = (orderId) =>{
-    return axiosInstance.put(`/order/updateOrder/${orderId}`)
+export const updateOrder = (updatedData,orderId) =>{
+    return axiosInstance.put(`/order/updateOrder/${orderId}`, updatedData)
 }
 
 export const deleteOrderItem = (orderId,orderItemId) =>{

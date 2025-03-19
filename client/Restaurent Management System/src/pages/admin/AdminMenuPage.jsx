@@ -102,9 +102,9 @@ const AdminMenuPage = () => {
     },
   ];
 
-  const handleMenuItemClick = (path) => {
+  const handleMenuItemClick = (path,itemId) => {
     navigate(path); // Fix: navigate to the route instead of just setting active state
-    // setActive(itemId);
+    setActive(itemId);
     if (window.innerWidth < 768) {
       setMobileOpen(false);
     }
@@ -160,7 +160,7 @@ const AdminMenuPage = () => {
             {menuItems.map((item) => (
               <li key={item.id}>
                 <button
-                  onClick={() => handleMenuItemClick(item.path)}
+                  onClick={() => handleMenuItemClick(item.path,item.id)}
                   className={`flex items-center px-4 py-3 w-full hover:bg-gray-800 transition-colors ${
                     location.pathname === item.path ? "bg-blue-600" : ""
                   }`}
@@ -211,7 +211,7 @@ const AdminMenuPage = () => {
         </div>
         <div className="bg-white rounded-lg shadow p-4 md:p-6 min-h-full">
           <h2 className="text-xl md:text-2xl font-semibold mb-4 md:mb-6">
-            {menuItems.find((item) => item.id === active)?.label}
+            {menuItems.find((item) => item.id === active)?.label || "Loading..."}
           </h2>
           <div className="bg-white rounded-lg shadow p-4 md:p-6 min-h-full">
             <Outlet />
