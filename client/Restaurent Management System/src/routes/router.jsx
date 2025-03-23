@@ -18,6 +18,9 @@ import CartPage from "../pages/customer/CartPage";
 import OrderPage from "../pages/customer/OrderPage";
 import ReservationManagement from "../pages/customer/ReservationManagement";
 import OrderManagement from "../pages/customer/OrderManagement";
+import ReportDashboard from "../pages/admin/ReportDashboard";
+import OrderConfirmation from "../pages/customer/OrderConfirmation";
+import AboutPage from "../pages/customer/AboutPage";
 
 export const router = createBrowserRouter([
   {
@@ -50,6 +53,10 @@ export const router = createBrowserRouter([
         element: <MenuItemPage />,
       },
       {
+        path:"about",
+        element: <AboutPage/>,
+      },
+      {
         path:"reservation",
         element: <ReservationPage/>,
       },
@@ -72,6 +79,10 @@ export const router = createBrowserRouter([
     ],
   },
   {
+    path:"/customer/orderConfirmation",
+    element: <OrderConfirmation/>,
+  },
+  {
     path: "/admin",
     element: (
       <ProtectedRoute allowedRoles={["admin", "staff"]}>
@@ -91,7 +102,8 @@ export const router = createBrowserRouter([
           { path: "manageStaffs", element: <ManageStaff /> },
           {path: "manageMenuItems", element: <ManageMenuItems/> },
           {path: "manageOrders",element: <ManageOrders/>},
-          {path: "manageReservations",element: <ManageReservations/>}
+          {path: "manageReservations",element: <ManageReservations/>},
+          {path:"reports",element: <ReportDashboard/>},
         ],
       },
     ],

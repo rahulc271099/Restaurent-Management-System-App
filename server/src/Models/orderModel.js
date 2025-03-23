@@ -30,6 +30,23 @@ const orderSchema = new mongoose.Schema({
         type: [{ type: mongoose.Schema.Types.ObjectId, ref: "orderItems" }],
         required: true,
       },
+      delivery_address: {
+        street: { type: String },
+        city: { type: String },
+        state: { type: String },
+        zip: { type: String },
+        instructions: { type: String },
+      },
+      contact_info: {
+        name: { type: String },
+        phone: { type: String, required: true },
+        email: { type: String },
+      },
+      payment_method: {
+        type: String,
+        enum: ["cash", "card", "online"],
+        required: true,
+      },
     },{
     timestamps:true,
 });

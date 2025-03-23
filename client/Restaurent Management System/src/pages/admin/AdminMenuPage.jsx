@@ -92,7 +92,7 @@ const AdminMenuPage = () => {
       id: "reports",
       label: "Reports",
       icon: <FiBarChart2 size={20} />,
-      path: "/admin/reports",
+      path: "/admin/menu/reports",
     },
     {
       id: "settings",

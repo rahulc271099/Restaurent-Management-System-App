@@ -11,6 +11,7 @@ const waitingListRouter = require('./waitingListRouter')
 const menuItemRouter = require('./menuItemRouter')
 const cartRouter = require('./cartRouter')
 const orderRouter = require('./orderRouter')
+const { registerCustomer } = require('../controllers/customerController')
 
 const apiRouter = require('express').Router()
 
@@ -27,6 +28,7 @@ apiRouter.use('/waitingList', verifyToken, waitingListRouter)
 apiRouter.use('/auth', authRouter)
 apiRouter.use('/auth/verify', verifyUser)
 apiRouter.use('/register', register)
+apiRouter.use('/customerRegister', registerCustomer)
 apiRouter.use('/logOut', logOut)
 
 

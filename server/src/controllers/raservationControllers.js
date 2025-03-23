@@ -108,10 +108,21 @@ const getReservationDetails = async (req, res) => {
       }
     }
 
-    const reservations = await reservationDB
-      .find(filter)
-      .populate("table_id")
-      .populate("menu_items.menuItemId");
+    // const reservations = await reservationDB
+    //   .find(filter)
+    //   .populate("table_id")
+    //   .populate("menu_items.menuItemId");
+
+    let query = reservationDB.find(filter).populate("table_id").populate("menu_items.menuItemId");
+
+    // Populate user details ONLY if the role is 'customer'
+    if (user_role === "admin") {
+      query = query.populate({
+        path: "user_id",
+        select: "name email phone role", // Select only required fields
+      });
+    }
+    const reservations = await query;
 
     if (!reservations.length) {
       return res.status(404).json({

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getCart } from "../../services/cartServices";
+import { createOrder } from "../../services/orderServices";
 
 const OrderPage = () => {
   const navigate = useNavigate();
@@ -44,10 +45,32 @@ const OrderPage = () => {
   };
 
   const handlePlaceOrder = () => {
-    // This would send the order to your backend
-    toast.success("Your order has been placed successfully!");
+    const orderItems = cartItems.map(item => ({
+      item_id: item.menuItemId,  // Renaming menuItemId to item_id
+      name: item.name,
+      price: item.price,
+      quantity: item.quantity
+    }));
+
+    const orderData = {
+      order_items:orderItems,
+      order_type:orderType,
+      payment_method:paymentMethod,
+      delivery_address: orderType === "delivery" ? deliveryAddress : null, // Only if delivery
+      contact_info:contactInfo,
+      subtotal,
+      deliveryFee,
+      tax,
+      total_amount:total,
+    };
+    createOrder(orderData).then(res=>{
+      console.log(res);
+      toast.success("Your order has been placed successfully!");
+    }).catch(err=>{
+      console.log(err);
+    })
     setTimeout(() => {
-      navigate("/customer/order-confirmation");
+      navigate("/customer/orderConfirmation");
     }, 1500);
   };
 

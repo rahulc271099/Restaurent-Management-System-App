@@ -10,12 +10,18 @@ import {
   FiPackage,
   FiClock,
 } from "react-icons/fi";
-import { getOrders, updateOrder } from "../../services/orderServices";
+import {
+  deleteOrder,
+  getOrders,
+  updateOrder,
+  updateOrderItems,
+} from "../../services/orderServices";
 import { getMenuItems } from "../../services/menuServices";
+import { toast } from "react-toastify";
 
 const ManageOrders = () => {
   const [orders, setOrders] = useState([]);
-  const [menuItems,setMenuItems] = useState([])
+  const [menuItems, setMenuItems] = useState([]);
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -26,10 +32,10 @@ const ManageOrders = () => {
     customer: "",
     date: new Date().toISOString().split("T")[0],
     items: 0,
-    menu_items:[],
+    menu_items: [],
     quantity: 0,
     table_id: "",
-    total: 0,
+    total_amount: 0,
     status: "Pending",
   });
 
@@ -44,60 +50,86 @@ const ManageOrders = () => {
       });
   }, []);
 
-  useEffect(()=>{
-    getMenuItems().then(res=>{
-      console.log(res);
-      setMenuItems(res.data)
-    }).catch(err=>{
-      console.log(err);
-    })
-  },[])
-
-  
+  useEffect(() => {
+    getMenuItems()
+      .then((res) => {
+        console.log(res);
+        setMenuItems(res.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
 
   // Handle order creation
   const handleAddOrder = () => {
-    const newOrder = {
-      id: orders.length + 1,
-      customer: formData.customer,
-      date: formData.date,
-      total: parseFloat(formData.total),
-      items: parseInt(formData.items),
-      status: formData.status,
-    };
-    setOrders([...orders, newOrder]);
     setShowAddModal(false);
     setFormData({
       customer: "",
       date: new Date().toISOString().split("T")[0],
       items: 0,
-      total: 0,
+      menu_items: [],
+      total_amount: 0,
       status: "Pending",
     });
   };
 
   // Handle edit order
-  const handleEditOrder = () => {
-    console.log(formData);
-    updateOrder(formData,currentOrder._id).then(res=>{
-      console.log(res);
-      return getOrders()
-    })
-    .then((response)=>{
-      console.log(response);
-      setOrders(response.data.data)
-    })
-    .catch(err=>{
-      console.log(err);
-    })
-    setShowEditModal(false);
+  const handleEditOrder = async () => {
+    try {
+      // Convert menu_items to order_items
+      // const formattedOrderData = {
+      //   ...formData,
+      //   order_items: formData.menu_items, // Rename menu_items to order_items
+      // };
+
+      // delete formattedOrderData.menu_items; // Remove menu_items to avoid duplication
+
+      // Update Order Details
+      await updateOrder(
+        { status: formData.status, total_amount: formData.total_amount },
+        currentOrder._id
+      );
+      console.log(formData);
+      // Update Order Items
+      if (formData.menu_items.length > 0) {
+        const itemsToUpdate = formData.menu_items.map((item) => ({
+          _id: item._id || undefined, // If existing, keep _id; otherwise, null for new items
+          item_id: item.item_id?._id || item.item_id,
+          quantity: item.quantity,
+          price: item.price,
+        }));
+
+        await updateOrderItems({ orderItems: itemsToUpdate }, currentOrder._id);
+      }
+      toast.success("Order updated successfully");
+      // Fetch updated orders
+      const updatedOrders = await getOrders();
+      setOrders(updatedOrders.data.data);
+
+      // Close modal
+      setShowEditModal(false);
+    } catch (err) {
+      console.error("Error updating order:", err);
+      toast.error(err.response.data.error);
+    }
   };
 
   // Handle delete order
   const handleDeleteOrder = () => {
-    const updatedOrders = orders.filter((o) => o.id !== currentOrder.id);
-    setOrders(updatedOrders);
-    setShowDeleteModal(false);
+    deleteOrder()
+      .then((res) => {
+        console.log(res);
+        return getOrders();
+      })
+      .then((response) => {
+        console.log(response);
+        setOrders(response.data.data);
+        setShowDeleteModal(false);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
 
   // Open edit modal with current order data
@@ -106,9 +138,9 @@ const ManageOrders = () => {
     setFormData({
       customer: order.user_id.name,
       date: new Date(order.order_time).toISOString().slice(0, 16),
-      total: order.total_amount,
+      total_amount: order.total_amount,
       items: order.order_items.length,
-      menu_items:order.order_items,
+      menu_items: order.order_items,
       status: order.status,
     });
     setShowEditModal(true);
@@ -120,20 +152,13 @@ const ManageOrders = () => {
     setShowDeleteModal(true);
   };
 
-  // Filter orders based on search term
-  // const filteredOrders = orders ?.filter(
-  //   (o) =>
-  //     o.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //     o.status?.toLowerCase().includes(searchTerm.toLowerCase())
-  // );
-
   const filteredOrders = Array.isArray(orders)
-  ? orders.filter(
-      (o) =>
-        o.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        o.status?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  : [];
+    ? orders.filter(
+        (o) =>
+          o.customer?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          o.status?.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   // Status badge color
   const getStatusColor = (status) => {
@@ -164,9 +189,9 @@ const ManageOrders = () => {
     const existingItem = formData.menu_items.find(
       (menuItem) => menuItem.item_id._id === item._id
     );
-  
+
     let updatedItems;
-    
+
     if (existingItem) {
       // Remove item if already selected
       updatedItems = formData.menu_items.filter(
@@ -179,14 +204,18 @@ const ManageOrders = () => {
         { item_id: { ...item }, quantity: 1 },
       ];
     }
-  
+
     // Calculate new total amount
     const newTotal = updatedItems.reduce(
       (sum, menuItem) => sum + menuItem.item_id.price * menuItem.quantity,
       0
     );
-  
-    setFormData({ ...formData, menu_items: updatedItems, total: newTotal });
+
+    setFormData({
+      ...formData,
+      menu_items: updatedItems,
+      total_amount: newTotal,
+    });
   };
 
   //handle menu item quantity change
@@ -196,16 +225,16 @@ const ManageOrders = () => {
         ? { ...menuItem, quantity: parseInt(quantity, 10) }
         : menuItem
     );
-  
+
     // Remove items if quantity is set to 0
     updatedItems = updatedItems.filter((menuItem) => menuItem.quantity > 0);
-  
+
     // Recalculate total amount
     const newTotal = updatedItems.reduce(
       (sum, menuItem) => sum + menuItem.item_id.price * menuItem.quantity,
       0
     );
-  
+
     setFormData({ ...formData, menu_items: updatedItems, total: newTotal });
   };
 
@@ -296,16 +325,19 @@ const ManageOrders = () => {
                     <div className="flex items-center">
                       <FiCalendar className="mr-2 text-gray-400" />
                       {/* {order.order_time} */}
-                      {new Date(order.order_time).toLocaleString()} •{" "}
+                      {new Date(order.order_time).toLocaleString()}
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center">
-                      <FiPackage className="mr-2 text-gray-400" />
+                    <div className="grid items-center whitespace-nowrap">
+                      {/* <FiPackage className="mr-2 text-gray-400" /> */}
                       {/* {order.items} */}
-                      {order.order_items
-                        .map((item) => item.item_id.name)
-                        .join(",")}
+                      {order.order_items.map((item) => (
+                        <p key={item.item_id._id} className="flex items-center">
+                          <FiPackage className="mr-2 text-gray-400" />
+                          {item.item_id.name}
+                        </p>
+                      ))}
                     </div>
                   </td>
                   <td className="px-6 py-4">
@@ -392,7 +424,7 @@ const ManageOrders = () => {
                     value={formData.customer}
                     onChange={handleInputChange}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full pl-10 p-2.5"
-                    placeholder="John Doe"
+                    placeholder="Name"
                     required
                   />
                 </div>
@@ -444,8 +476,8 @@ const ManageOrders = () => {
                   </div>
                   <input
                     type="number"
-                    name="total"
-                    value={formData.total}
+                    name="total_amount"
+                    value={formData.total_amount}
                     onChange={handleInputChange}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full pl-10 p-2.5"
                     min="0"
@@ -550,7 +582,7 @@ const ManageOrders = () => {
                 <input
                   type="number"
                   name="total"
-                  value={formData.total}
+                  value={formData.total_amount}
                   onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                   min="0"

@@ -128,7 +128,7 @@ const AdminDashboard = () => {
           </button>
 
           <div className="ml-2 space-x-2">
-            <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
+            <button onClick={()=>navigate("/admin/menu/manageTables")} className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
               Admin Panel
             </button>
             <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
@@ -137,8 +137,8 @@ const AdminDashboard = () => {
             <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
               Billing
             </button>
-            <button onClick={()=>navigate("/admin/menu/manageTables")} className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
-              Menu
+            <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
+              Menu item
             </button>
             <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
               New
