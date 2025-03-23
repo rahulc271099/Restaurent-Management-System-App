@@ -21,6 +21,8 @@ import OrderManagement from "../pages/customer/OrderManagement";
 import ReportDashboard from "../pages/admin/ReportDashboard";
 import OrderConfirmation from "../pages/customer/OrderConfirmation";
 import AboutPage from "../pages/customer/AboutPage";
+import GalleryPage from "../pages/customer/GalleryPage";
+import ContactPage from "../pages/customer/ContactPage";
 
 export const router = createBrowserRouter([
   {
@@ -55,6 +57,14 @@ export const router = createBrowserRouter([
       {
         path:"about",
         element: <AboutPage/>,
+      },
+      {
+        path:"gallery",
+        element: <GalleryPage/>,
+      },
+      {
+        path:"contact",
+        element: <ContactPage/>,
       },
       {
         path:"reservation",
