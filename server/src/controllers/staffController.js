@@ -8,6 +8,7 @@ const {
 const createStaff = async (req, res) => {
   try {
     const { name, email, password, phone, staffDetails } = req.body;
+    console.log(req.body);
     if (!name || !email || !password || !phone) {
       return res.status(400).json({
         error: "All fields are required",

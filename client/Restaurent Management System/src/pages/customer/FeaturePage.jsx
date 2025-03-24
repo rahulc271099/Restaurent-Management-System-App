@@ -1,5 +1,6 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
 
 const FeaturePage = () => {
 
@@ -39,6 +40,9 @@ const FeaturePage = () => {
         "https://media.istockphoto.com/id/506710908/photo/small-chocolate-mud-cakes.webp?a=1&b=1&s=612x612&w=0&k=20&c=VTtrOqZ5IGJIFUPwvZG4BccQMAROBg6QhzANQFc9wjU=",
     },
   ];
+
+  const [chefSpecial,setChefSpecial] = useState([])
+
   return (
     <div className="bg-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">

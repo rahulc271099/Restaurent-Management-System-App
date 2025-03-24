@@ -13,7 +13,7 @@ import {
   FiChevronDown,
   FiCheck,
 } from "react-icons/fi";
-import { getReservations } from "../../services/reservationServices";
+import { createReservation, getReservations } from "../../services/reservationServices";
 
 const ManageReservations = () => {
   const [reservations, setReservations] = useState([]);
@@ -62,24 +62,18 @@ const ManageReservations = () => {
   // Handle reservation creation
   const handleAddReservation = async () => {
     try {
-      // Replace with your actual API call
-      // const response = await fetch('your-api-endpoint/reservations', {
-      //   method: 'POST',
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //   },
-      //   body: JSON.stringify(formData),
-      // });
-      // const data = await response.json();
-
-      // Mock adding a new reservation
-      const newReservation = {
-        id: reservations.length + 1,
-        ...formData,
-      };
-
-      setReservations([...reservations, newReservation]);
-      setShowAddModal(false);
+      createReservation().then(res=>{
+        console.log(res);
+        return getReservations()
+      })
+      .then((response)=>{
+        console.log(response);
+        setReservations(response.data.data)
+        setShowAddModal(false);
+      })
+      .catch(err=>{
+        console.log(err);
+      })
       resetForm();
     } catch (err) {
       setError("Failed to add reservation");
@@ -559,11 +553,10 @@ const ManageReservations = () => {
                     onChange={handleInputChange}
                     className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                   >
-                    <option value="Confirmed">Confirmed</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Cancelled">Cancelled</option>
-                    <option value="Completed">Completed</option>
-                    <option value="No-Show">No-Show</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="waiting">Waiting</option>
+                    <option value="completed">Completed</option>
+                    <option value="cancelled">Cancelled</option>
                   </select>
                 </div>
               </div>

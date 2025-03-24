@@ -39,24 +39,6 @@ const AdminMenuPage = () => {
     return () => window.removeEventListener("resize", handleResize);
   }, []);
 
-  //   const menuItems = [
-  //     { id: "tables", label: "Manage Tables", icon: <FiGrid size={20} /> },
-  //     { id: "staff", label: "Manage Staff", icon: <FiUsers size={20} /> },
-  //     { id: "menu", label: "Manage Menu Items", icon: <FiClipboard size={20} /> },
-  //     {
-  //       id: "orders",
-  //       label: "Manage Orders",
-  //       icon: <FiShoppingCart size={20} />,
-  //     },
-  //     {
-  //       id: "reservations",
-  //       label: "Manage Reservations",
-  //       icon: <FiCalendar size={20} />,
-  //     },
-  //     { id: "reports", label: "Reports", icon: <FiBarChart2 size={20} /> },
-  //     { id: "settings", label: "Settings", icon: <FiSettings size={20} /> },
-  //   ];
-
   const menuItems = [
     {
       id: "tables",

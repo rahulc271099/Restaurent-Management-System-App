@@ -12,31 +12,48 @@ import {
   addMenuItems,
   deleteMenuItem,
   getMenuItems,
+  updateChefSpecial,
   updateMenuItem,
 } from "../../services/menuServices";
 import { toast } from "react-toastify";
 
+
 const ManageMenuItems = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [newCategories,setNewCategories] = useState(["appetizer", "main course", "dessert", "beverage"])
-  const [newDietary,setNewDietary] = useState(["vegetarian", "vegan", "gluten-free", "non-vegetarian"])
+  const [newCategories, setNewCategories] = useState([
+    "appetizer",
+    "main course",
+    "dessert",
+    "beverage",
+  ]);
+  const [newDietary, setNewDietary] = useState([
+    "vegetarian",
+    "vegan",
+    "gluten-free",
+    "non-vegetarian",
+  ]);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showChefSpecialModal, setShowChefSpecialModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [currentItem, setCurrentItem] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
+  const [selectedMenuItems,setSelectedMenuItems] = useState([])
+  const [updatedMenuItemId,setUpdatedMenuItemId] = useState([])
 
   const [formData, setFormData] = useState({
     name: "",
     price: "",
     category: "main course",
-    dietary:"",
+    dietary: "",
     description: "",
     image: null,
     availability: "",
-    isAvailable: false, 
+    isAvailable: false,
+    tags: [], // Store multiple tags
+    chefSpecial: false,
   });
 
   // Handle form input changes
@@ -45,6 +62,12 @@ const ManageMenuItems = () => {
     // setFormData({ ...formData, [name]: value });
     if (type === "file") {
       setFormData({ ...formData, image: e.target.files[0] });
+    } else if (name === "tags") {
+      const tagArray = value
+        .split(",")
+        .map((tag) => tag.trim())
+        .filter((tag) => tag !== "");
+      setFormData({ ...formData, tags: tagArray });
     } else {
       setFormData({ ...formData, [name]: value });
     }
@@ -63,16 +86,27 @@ const ManageMenuItems = () => {
   const handleAddMenuItem = () => {
     const newItem = new FormData(); // ✅ Use FormData to handle file uploads
 
-  newItem.append("name", formData.name);
-  newItem.append("price", parseFloat(formData.price));
-  newItem.append("category", formData.category);
-  newItem.append("dietary", formData.dietary);
-  newItem.append("description", formData.description);
-  newItem.append("availability", formData.isAvailable ? "in-stock" : "out-of-stock");
+    newItem.append("name", formData.name);
+    newItem.append("price", parseFloat(formData.price));
+    newItem.append("category", formData.category);
+    newItem.append("dietary", formData.dietary);
+    newItem.append("description", formData.description);
+    newItem.append(
+      "availability",
+      formData.isAvailable ? "in-stock" : "out-of-stock"
+    );
 
-  if (formData.image) {
-    newItem.append("image", formData.image); // ✅ Appending image file correctly
-  }
+    if (formData.image) {
+      newItem.append("image", formData.image); // ✅ Appending image file correctly
+    }
+
+    formData.tags.forEach((tag) => {
+      newItem.append("tags[]", tag); // ✅ Sends multiple values correctly
+    });
+
+    // / ✅ Append Chef's Special as true/false
+    newItem.append("chefSpecial", formData.chefSpecial);
+
     addMenuItems(newItem)
       .then((res) => {
         console.log(res);
@@ -87,11 +121,13 @@ const ManageMenuItems = () => {
           name: "",
           price: "",
           category: "",
-          dietary:"",
+          dietary: "",
           description: "",
           image: null,
-          availability:"",
+          availability: "",
           isAvailable: false,
+          tags: [],
+          chefSpecial: false,
         });
       })
       .catch((err) => {
@@ -123,14 +159,14 @@ const ManageMenuItems = () => {
         setMenuItems(response.data);
         setShowEditModal(false);
         setFormData({
-            name: "",
-            price: "",
-            category: "",
-            description: "",
-            image: null,
-            availability:"",
-            isAvailable: false,
-          });
+          name: "",
+          price: "",
+          category: "",
+          description: "",
+          image: null,
+          availability: "",
+          isAvailable: false,
+        });
       })
       .catch((err) => {
         console.log(err);
@@ -158,18 +194,36 @@ const ManageMenuItems = () => {
     setShowDeleteModal(false);
   };
 
+  const handleClose = () =>{
+    setShowChefSpecialModal(false)
+  }
+
+  //handle chef special update
+  const handleUpdateChefSpecial = () => {
+    updateChefSpecial(updatedMenuItemId).then(res=>{
+      console.log(res);
+    }).catch(err=>{
+      console.log(err);
+    })
+    onClose();
+  };
+
+
+  //open add modal
   const handleOpenAddModal = () => {
     setFormData({
       name: "",
       price: "",
       category: "main course",
-      dietary:"",
+      dietary: "",
       description: "",
       image: null,
       availability: "",
-      isAvailable:false,
+      isAvailable: false,
+      tags: [],
+      chefSpecial: false,
     });
-    setShowAddModal(true)
+    setShowAddModal(true);
   };
   // Open edit modal with current item data
   const openEditModal = (item) => {
@@ -181,7 +235,7 @@ const ManageMenuItems = () => {
       description: item.description,
       image: item.image,
       availability: item.availability,
-      isAvailable:item.availability === 'in-stock' ? true:false,
+      isAvailable: item.availability === "in-stock" ? true : false,
     });
     setShowEditModal(true);
   };
@@ -198,8 +252,8 @@ const ManageMenuItems = () => {
       item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (item.description &&
         item.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (item.availability && 
-        item.availability.toLowerCase().includes(searchTerm.toLowerCase()))  
+      (item.availability &&
+        item.availability.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesCategory =
       categoryFilter === "All" || item.category === categoryFilter;
     return matchesSearch && matchesCategory;
@@ -255,6 +309,15 @@ const ManageMenuItems = () => {
           >
             <FiPlus className="mr-2" />
             Add Menu Item
+          </button>
+        </div>
+        {/* Open Modal Button */}
+        <div className="flex items-center gap-4">
+          <button
+            onClick={() => setShowChefSpecialModal(true)}
+            className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          >
+            Set Chef's Specials
           </button>
         </div>
       </div>
@@ -328,10 +391,55 @@ const ManageMenuItems = () => {
         )}
       </div>
 
+      {/* chef special modal */}
+      {showChefSpecialModal && (
+        <div className="p-6">
+          <button className="absolute top-3 right-3 text-gray-600" onClick={handleClose}>
+          ✕
+        </button>
+          <h1 className="text-2xl font-bold text-gray-900 mb-6">
+            Set Chef's Specials
+          </h1>
+          <div className="grid grid-cols-3 gap-4">
+            {menuItems.map((item) => (
+              <div
+                key={item._id}
+                onClick={() => handleItemSelect(item._id)}
+                className={`relative cursor-pointer p-4 rounded-lg text-center transition-all duration-300 ${
+                  selectedMenuItems.includes(item._id)
+                    ? "bg-green-100 border-green-500"
+                    : "bg-gray-100 hover:bg-gray-200"
+                } border-2`}
+              >
+                <span className="text-sm font-medium text-gray-800">
+                  {item.name}
+                </span>
+                {selectedMenuItems.includes(item._id) && (
+                  <Check className="absolute top-2 right-2 text-green-600 h-5 w-5" />
+                )}
+              </div>
+            ))}
+          </div>
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={handleUpdateChefSpecial}
+              disabled={selectedMenuItems.length === 0}
+              className={`px-6 py-2 rounded-lg transition-colors ${
+                selectedMenuItems.length > 0
+                  ? "bg-green-600 text-white hover:bg-green-700"
+                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
+              }`}
+            >
+              Save Chef's Specials
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Add Menu Item Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4 overflow-auto">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-4 border-b">
               <h3 className="text-lg font-medium text-gray-900">
                 Add New Menu Item
@@ -406,6 +514,53 @@ const ManageMenuItems = () => {
                     </option>
                   ))}
                 </select>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Tags
+                </label>
+                <input
+                  type="text"
+                  name="tags"
+                  value={formData.tags.join(",")}
+                  onChange={handleInputChange}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                  placeholder="Item Name"
+                  required
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Chef's Special
+                </label>
+                <div className="flex items-center space-x-2">
+                  {/* Toggle Switch */}
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        chefSpecial: !formData.chefSpecial,
+                      })
+                    }
+                    className={`w-12 h-6 flex items-center rounded-full p-1 transition ${
+                      formData.chefSpecial ? "bg-blue-500" : "bg-gray-300"
+                    }`}
+                  >
+                    <div
+                      className={`bg-white w-5 h-5 rounded-full shadow-md transform transition ${
+                        formData.chefSpecial ? "translate-x-6" : "translate-x-0"
+                      }`}
+                    ></div>
+                  </button>
+
+                  {/* Label when enabled */}
+                  {formData.chefSpecial && (
+                    <span className="text-blue-500 text-sm font-medium">
+                      Added to Chef’s Special
+                    </span>
+                  )}
+                </div>
               </div>
               <div className="mb-4">
                 <label className="block text-sm font-medium text-gray-700 mb-1">

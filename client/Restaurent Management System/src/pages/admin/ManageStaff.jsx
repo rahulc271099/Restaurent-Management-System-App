@@ -40,7 +40,7 @@ const ManageStaff = () => {
       shift_start: "",
       shift_end: "",
       status: "active",
-      position: "",
+      position: "manager",
     },
   });
 
@@ -100,7 +100,7 @@ const ManageStaff = () => {
               shift_start: "",
               shift_end: "",
               status: "active",
-              position: "",
+              position: "manager",
             },
         });
       })
@@ -171,7 +171,7 @@ const ManageStaff = () => {
         shift_start: "",
         shift_end: "",
         status: "active",
-        position: "",
+        position: "manager",
       },
     });
     setShowAddModal(true);
@@ -504,7 +504,7 @@ const ManageStaff = () => {
                 </label>
                 <select
                   name="position"
-                  value={formData.staffDetails.position}
+                  value={formData.staffDetails.position || "manager"}
                   onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                 >

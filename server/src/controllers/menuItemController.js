@@ -1,21 +1,27 @@
+const { default: mongoose } = require("mongoose");
 const menuItemDB = require("../Models/menuItemModel");
 const uploadToCloudinary = require("../Utilities/imageUpload");
 
 const createMenuItem = async (req, res) => {
   try {
-    const { name, description, price, category, availability } = req.body;
+    const { name, description, price, category, availability,chefSpecial } = req.body;
     if (!name || !description || !price || !category || !availability) {
       return res.status(400).json({
         error: "All fields are required",
       });
     }
 
-    if(!req.file){
+    if (!req.file) {
       return res.status(400).json({
-        error:"Image not found"
-      })
+        error: "Image not found",
+      });
     }
-    const cloudinaryResponse = await uploadToCloudinary(req.file.path)
+    const cloudinaryResponse = await uploadToCloudinary(req.file.path);
+
+    let tags = req.body.tags;
+    if (!Array.isArray(tags)) {
+      tags = [tags]; // Convert single value into an array
+    }
 
     const newMenuItem = new menuItemDB({
       name,
@@ -23,7 +29,11 @@ const createMenuItem = async (req, res) => {
       price,
       category,
       availability,
-      image:cloudinaryResponse,
+      image: cloudinaryResponse,
+      tags,
+      chefSpecial,
+      salesCount,
+      rating,
     });
 
     const saved = await newMenuItem.save();
@@ -74,9 +84,31 @@ const getMenuItems = async (req, res) => {
     const menuItems = await menuItemDB.find(filter);
     res.status(200).json(menuItems);
   } catch (error) {
-    res.status(500).json({ messege:"Internal server error", error });
+    res.status(500).json({ messege: "Internal server error", error });
   }
 };
+
+const getPopularItems = async (req, res) => {
+  try {
+    const specialItems = await menuItemDB
+      .find({ chefSpecial: true, availability: "in-stock" })
+      .limit(5);
+    if (!specialItems) {
+      return res.status(400).json({
+        error: "No special items",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      data: specialItems,
+    });
+  } catch (error) {
+    res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+
 
 const updateMenuItem = async (req, res) => {
   try {
@@ -89,9 +121,13 @@ const updateMenuItem = async (req, res) => {
       });
     }
 
-    const updatedMenuItem = await menuItemDB.findByIdAndUpdate(menuItemId, {name, description, price, category, availability},{
-      new: true,
-    });
+    const updatedMenuItem = await menuItemDB.findByIdAndUpdate(
+      menuItemId,
+      { name, description, price, category, availability },
+      {
+        new: true,
+      }
+    );
 
     res.status(200).json({
       success: true,
@@ -130,4 +166,10 @@ const deleteMenuItem = async (req, res) => {
   }
 };
 
-module.exports = { createMenuItem, getMenuItems, updateMenuItem, deleteMenuItem};
+module.exports = {
+  createMenuItem,
+  getMenuItems,
+  getPopularItems,
+  updateMenuItem,
+  deleteMenuItem,
+};
