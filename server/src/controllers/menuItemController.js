@@ -1,4 +1,5 @@
 const menuItemDB = require("../Models/menuItemModel");
+const uploadToCloudinary = require("../Utilities/imageUpload");
 
 const createMenuItem = async (req, res) => {
   try {
@@ -9,12 +10,20 @@ const createMenuItem = async (req, res) => {
       });
     }
 
+    if(!req.file){
+      return res.status(400).json({
+        error:"Image not found"
+      })
+    }
+    const cloudinaryResponse = await uploadToCloudinary(req.file.path)
+
     const newMenuItem = new menuItemDB({
       name,
       description,
       price,
       category,
       availability,
+      image:cloudinaryResponse,
     });
 
     const saved = await newMenuItem.save();

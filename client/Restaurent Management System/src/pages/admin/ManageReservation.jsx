@@ -41,42 +41,16 @@ const ManageReservations = () => {
 
   // Fetch reservations from backend
   useEffect(() => {
-    // const fetchReservations = async () => {
-    //   try {
-    //     setLoading(true);
-
-    //     // Replace this with your actual API call
-    //     // const response = await fetch('your-api-endpoint/reservations');
-    //     // const data = await response.json();
-
-    //     // Mocking data for demonstration purposes
-    //     const mockData = [
-    //       { id: 1, customerName: "John Smith", email: "john@example.com", phone: "555-123-4567", date: "2025-03-15", time: "19:00", partySize: 4, status: "Confirmed", specialRequests: "Window seat preferred" },
-    //       { id: 2, customerName: "Emma Johnson", email: "emma@example.com", phone: "555-987-6543", date: "2025-03-15", time: "20:00", partySize: 2, status: "Confirmed", specialRequests: "" },
-    //       { id: 3, customerName: "Michael Brown", email: "michael@example.com", phone: "555-456-7890", date: "2025-03-16", time: "18:30", partySize: 6, status: "Pending", specialRequests: "Birthday celebration" },
-    //       { id: 4, customerName: "Sarah Davis", email: "sarah@example.com", phone: "555-789-0123", date: "2025-03-16", time: "19:30", partySize: 3, status: "Cancelled", specialRequests: "" },
-    //       { id: 5, customerName: "Robert Wilson", email: "robert@example.com", phone: "555-234-5678", date: "2025-03-17", time: "20:15", partySize: 8, status: "Confirmed", specialRequests: "Gluten-free options needed" }
-    //     ];
-
-    //     setReservations(mockData);
-    //     setLoading(false);
-    //   } catch (err) {
-    //     setError("Failed to fetch reservations");
-    //     setLoading(false);
-    //   }
-    // };
-
-    // fetchReservations();
 
     getReservations()
       .then((res) => {
         console.log(res);
         setReservations(res.data.data);
-        setLoading(false);
       })
       .catch((err) => {
         console.log(err);
       });
+      setLoading(false);
   }, []);
 
   // Handle form input changes

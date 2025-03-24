@@ -186,8 +186,7 @@ const MenuItemPage = () => {
                 >
                   <div className="relative">
                     <img
-                      // src={item.image}
-                      src=""
+                      src={item.image}
                       alt={item.name}
                       className="w-full h-48 object-cover"
                     />

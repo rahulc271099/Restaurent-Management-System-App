@@ -19,7 +19,8 @@ import { toast } from "react-toastify";
 const ManageMenuItems = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
-
+  const [newCategories,setNewCategories] = useState(["appetizer", "main course", "dessert", "beverage"])
+  const [newDietary,setNewDietary] = useState(["vegetarian", "vegan", "gluten-free", "non-vegetarian"])
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
@@ -31,6 +32,7 @@ const ManageMenuItems = () => {
     name: "",
     price: "",
     category: "main course",
+    dietary:"",
     description: "",
     image: null,
     availability: "",
@@ -39,8 +41,13 @@ const ManageMenuItems = () => {
 
   // Handle form input changes
   const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    const { name, value, type } = e.target;
+    // setFormData({ ...formData, [name]: value });
+    if (type === "file") {
+      setFormData({ ...formData, image: e.target.files[0] });
+    } else {
+      setFormData({ ...formData, [name]: value });
+    }
   };
 
   // Handle checkbox change
@@ -54,10 +61,18 @@ const ManageMenuItems = () => {
 
   // Handle menu item creation
   const handleAddMenuItem = () => {
-    const newItem = {
-      ...formData,
-      price: parseFloat(formData.price),
-    };
+    const newItem = new FormData(); // ✅ Use FormData to handle file uploads
+
+  newItem.append("name", formData.name);
+  newItem.append("price", parseFloat(formData.price));
+  newItem.append("category", formData.category);
+  newItem.append("dietary", formData.dietary);
+  newItem.append("description", formData.description);
+  newItem.append("availability", formData.isAvailable ? "in-stock" : "out-of-stock");
+
+  if (formData.image) {
+    newItem.append("image", formData.image); // ✅ Appending image file correctly
+  }
     addMenuItems(newItem)
       .then((res) => {
         console.log(res);
@@ -72,6 +87,7 @@ const ManageMenuItems = () => {
           name: "",
           price: "",
           category: "",
+          dietary:"",
           description: "",
           image: null,
           availability:"",
@@ -147,6 +163,7 @@ const ManageMenuItems = () => {
       name: "",
       price: "",
       category: "main course",
+      dietary:"",
       description: "",
       image: null,
       availability: "",
@@ -366,9 +383,26 @@ const ManageMenuItems = () => {
                   onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                 >
-                  {categories?.map((category) => (
+                  {newCategories?.map((category) => (
                     <option key={category} value={category}>
                       {category}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Dietary
+                </label>
+                <select
+                  name="dietary"
+                  value={formData.dietary}
+                  onChange={handleInputChange}
+                  className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
+                >
+                  {newDietary?.map((dietary) => (
+                    <option key={dietary} value={dietary}>
+                      {dietary}
                     </option>
                   ))}
                 </select>
@@ -392,6 +426,8 @@ const ManageMenuItems = () => {
                 </label>
                 <input
                   type="file"
+                  name="image"
+                  onChange={handleInputChange}
                   className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg block w-full p-2.5"
                   accept="image/*"
                 />
