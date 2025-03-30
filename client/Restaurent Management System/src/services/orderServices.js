@@ -6,6 +6,10 @@ export const getOrders = () =>{
     return axiosInstance.get('/order/getOrders')
 }
 
+export const getLatestOrder = () =>{
+    return axiosInstance.get('/order/getLatestOrder')
+}
+
 export const createOrder = (orderData) =>{
     return axiosInstance.post('/order/createOrder', orderData)
 }

@@ -26,6 +26,7 @@ const orderSchema = new mongoose.Schema({
         required: true,
       },
       total_amount: { type: Number, required: true },
+      tax:{type:Number},
       order_items: {
         type: [{ type: mongoose.Schema.Types.ObjectId, ref: "orderItems" }],
         required: true,
@@ -39,13 +40,14 @@ const orderSchema = new mongoose.Schema({
       },
       contact_info: {
         name: { type: String },
-        phone: { type: String, required: true },
+        phone: { type: String, function () {return this.order_type === "delivery"} },
         email: { type: String },
       },
       payment_method: {
         type: String,
-        enum: ["cash", "card", "online"],
+        enum: ["cash", "card", "online","pay-later"],
         required: true,
+        default:"cash",
       },
     },{
     timestamps:true,

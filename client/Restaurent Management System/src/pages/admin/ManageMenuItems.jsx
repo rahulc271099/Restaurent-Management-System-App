@@ -16,6 +16,7 @@ import {
   updateMenuItem,
 } from "../../services/menuServices";
 import { toast } from "react-toastify";
+import { Check } from "lucide-react";
 
 
 const ManageMenuItems = () => {
@@ -40,8 +41,8 @@ const ManageMenuItems = () => {
   const [currentItem, setCurrentItem] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("All");
-  const [selectedMenuItems,setSelectedMenuItems] = useState([])
-  const [updatedMenuItemId,setUpdatedMenuItemId] = useState([])
+  const [selectedMenuItems, setSelectedMenuItems] = useState([]);
+  const [updatedMenuItemId, setUpdatedMenuItemId] = useState([]);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -194,20 +195,33 @@ const ManageMenuItems = () => {
     setShowDeleteModal(false);
   };
 
-  const handleClose = () =>{
-    setShowChefSpecialModal(false)
+  const handleChefSpecialSelection = (itemId) =>{
+    setSelectedMenuItems((prevSelected = [])=>{
+      if(prevSelected.includes(itemId)){
+        return prevSelected.filter((_id)=>_id !== itemId)
+      }else{
+        return [...prevSelected,itemId]
+      }
+    })
   }
+
+  const handleClose = () => {
+    setShowChefSpecialModal(false);
+  };
 
   //handle chef special update
   const handleUpdateChefSpecial = () => {
-    updateChefSpecial(updatedMenuItemId).then(res=>{
-      console.log(res);
-    }).catch(err=>{
-      console.log(err);
-    })
-    onClose();
+    console.log(selectedMenuItems);
+    updateChefSpecial({menuItemIds:selectedMenuItems})
+      .then((res) => {
+        console.log(res);
+        setSelectedMenuItems([])
+        handleClose()
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   };
-
 
   //open add modal
   const handleOpenAddModal = () => {
@@ -258,6 +272,10 @@ const ManageMenuItems = () => {
       categoryFilter === "All" || item.category === categoryFilter;
     return matchesSearch && matchesCategory;
   });
+
+  useEffect(() => {
+    console.log("Modal State Changed:", showChefSpecialModal);
+  }, [showChefSpecialModal]);
 
   useEffect(() => {
     getMenuItems()
@@ -314,7 +332,11 @@ const ManageMenuItems = () => {
         {/* Open Modal Button */}
         <div className="flex items-center gap-4">
           <button
-            onClick={() => setShowChefSpecialModal(true)}
+            onClick={() => {
+              console.log("Clicked");
+              setShowChefSpecialModal(true);
+              console.log(showChefSpecialModal);
+            }}
             className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
           >
             Set Chef's Specials
@@ -393,45 +415,50 @@ const ManageMenuItems = () => {
 
       {/* chef special modal */}
       {showChefSpecialModal && (
-        <div className="p-6">
-          <button className="absolute top-3 right-3 text-gray-600" onClick={handleClose}>
-          ✕
-        </button>
-          <h1 className="text-2xl font-bold text-gray-900 mb-6">
-            Set Chef's Specials
-          </h1>
-          <div className="grid grid-cols-3 gap-4">
-            {menuItems.map((item) => (
-              <div
-                key={item._id}
-                onClick={() => handleItemSelect(item._id)}
-                className={`relative cursor-pointer p-4 rounded-lg text-center transition-all duration-300 ${
-                  selectedMenuItems.includes(item._id)
-                    ? "bg-green-100 border-green-500"
-                    : "bg-gray-100 hover:bg-gray-200"
-                } border-2`}
-              >
-                <span className="text-sm font-medium text-gray-800">
-                  {item.name}
-                </span>
-                {selectedMenuItems.includes(item._id) && (
-                  <Check className="absolute top-2 right-2 text-green-600 h-5 w-5" />
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="mt-6 flex justify-end">
+        <div className="fixed inset-0 flex justify-center items-center bg-black bg-opacity-50 z-50">
+          <div className="bg-white p-6 rounded-lg relative w-[400px] shadow-lg">
             <button
-              onClick={handleUpdateChefSpecial}
-              disabled={selectedMenuItems.length === 0}
-              className={`px-6 py-2 rounded-lg transition-colors ${
-                selectedMenuItems.length > 0
-                  ? "bg-green-600 text-white hover:bg-green-700"
-                  : "bg-gray-300 text-gray-500 cursor-not-allowed"
-              }`}
+              className="absolute top-3 right-3 text-gray-600"
+              onClick={handleClose}
             >
-              Save Chef's Specials
+              ✕
             </button>
+            <h1 className="text-2xl font-bold text-gray-900 mb-6">
+              Set Chef's Specials
+            </h1>
+            <div className="grid grid-cols-3 gap-4">
+              {menuItems.map((item) => (
+                <div
+                  key={item._id}
+                  onClick={() => handleChefSpecialSelection(item._id)}
+                  className={`relative cursor-pointer p-4 rounded-lg text-center transition-all ${
+                    selectedMenuItems ?.includes(item._id)
+                      ? "bg-green-100 border-green-500"
+                      : "bg-gray-100 hover:bg-gray-200"
+                  } border-2`}
+                >
+                  <span className="text-sm font-medium text-gray-800">
+                    {item.name}
+                  </span>
+                  {selectedMenuItems ?.includes(item._id) && (
+                    <Check className="absolute top-2 right-2 text-green-600 h-5 w-5" />
+                  )}
+                </div>
+              ))}
+            </div>
+            <div className="mt-6 flex justify-end">
+              <button
+                onClick={handleUpdateChefSpecial}
+                disabled={selectedMenuItems ?.length === 0}
+                className={`px-6 py-2 rounded-lg transition ${
+                  selectedMenuItems ?.length > 0
+                    ? "bg-green-600 text-white hover:bg-green-700"
+                    : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                }`}
+              >
+                Save Chef's Specials
+              </button>
+            </div>
           </div>
         </div>
       )}

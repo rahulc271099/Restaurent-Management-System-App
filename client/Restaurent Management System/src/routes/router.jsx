@@ -23,6 +23,10 @@ import OrderConfirmation from "../pages/customer/OrderConfirmation";
 import AboutPage from "../pages/customer/AboutPage";
 import GalleryPage from "../pages/customer/GalleryPage";
 import ContactPage from "../pages/customer/ContactPage";
+import StaffDashboard from "../pages/staff/StaffDashBoard";
+import TableSelectionPage from "../pages/staff/TableSelection";
+import StaffLayout from "../layout/StaffLayout";
+import StaffOrderManagement from "../pages/staff/StaffOrderManagement";
 
 export const router = createBrowserRouter([
   {
@@ -39,7 +43,7 @@ export const router = createBrowserRouter([
   },
   {
     path: "/customer",
-    element: <CustomerLayout/>,
+    element: <CustomerLayout />,
     // (
     //   <ProtectedRoute allowedRoles={['customer']}>
     //     <CustomerLayout />
@@ -55,47 +59,47 @@ export const router = createBrowserRouter([
         element: <MenuItemPage />,
       },
       {
-        path:"about",
-        element: <AboutPage/>,
+        path: "about",
+        element: <AboutPage />,
       },
       {
-        path:"gallery",
-        element: <GalleryPage/>,
+        path: "gallery",
+        element: <GalleryPage />,
       },
       {
-        path:"contact",
-        element: <ContactPage/>,
+        path: "contact",
+        element: <ContactPage />,
       },
       {
-        path:"reservation",
-        element: <ReservationPage/>,
+        path: "reservation",
+        element: <ReservationPage />,
       },
       {
-        path:"cart",
-        element: <CartPage/>,
+        path: "cart",
+        element: <CartPage />,
       },
       {
-        path:"order",
-        element: <OrderPage/>,
+        path: "order",
+        element: <OrderPage />,
       },
       {
-        path:"reservationManagement",
-        element: <ReservationManagement/>,
+        path: "reservationManagement",
+        element: <ReservationManagement />,
       },
       {
-        path:"orderManagement",
-        element: <OrderManagement/>,
+        path: "orderManagement",
+        element: <OrderManagement />,
       },
     ],
   },
   {
-    path:"/customer/orderConfirmation",
-    element: <OrderConfirmation/>,
+    path: "/customer/orderConfirmation",
+    element: <OrderConfirmation />,
   },
   {
     path: "/admin",
     element: (
-      <ProtectedRoute allowedRoles={["admin", "staff"]}>
+      <ProtectedRoute allowedRoles={["admin"]}>
         <AdminLayout />
       </ProtectedRoute>
     ),
@@ -105,17 +109,39 @@ export const router = createBrowserRouter([
         element: <AdminDashboard />,
       },
       {
-        path:"menu",
-        element: <AdminMenuPage/>,
+        path: "menu",
+        element: <AdminMenuPage />,
         children: [
           { path: "manageTables", element: <ManageTable /> },
           { path: "manageStaffs", element: <ManageStaff /> },
-          {path: "manageMenuItems", element: <ManageMenuItems/> },
-          {path: "manageOrders",element: <ManageOrders/>},
-          {path: "manageReservations",element: <ManageReservations/>},
-          {path:"reports",element: <ReportDashboard/>},
+          { path: "manageMenuItems", element: <ManageMenuItems /> },
+          { path: "manageOrders", element: <ManageOrders /> },
+          { path: "manageReservations", element: <ManageReservations /> },
+          { path: "reports", element: <ReportDashboard /> },
         ],
       },
     ],
+  },
+  {
+    path: "/staff",
+    element: (
+      <ProtectedRoute allowedRoles={["staff"]}>
+        <StaffLayout />
+      </ProtectedRoute>
+    ),
+    children:[
+      {
+        path: "",
+        element: <StaffDashboard />,
+      },
+      {
+        path: "tableSelection",
+        element: <TableSelectionPage />,
+      },
+      {
+        path:"orders",
+        element: <StaffOrderManagement/>,
+      },
+    ]
   },
 ]);

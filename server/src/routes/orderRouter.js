@@ -1,4 +1,4 @@
-const { createOrder, updateOrder, deleteOrder, getOrders, getOneOrder, updateOrderItems, getOrderItems, deleteOrderItem } = require('../controllers/orderController')
+const { createOrder, updateOrder, deleteOrder, getOrders, getOneOrder, updateOrderItems, getOrderItems, deleteOrderItem, getLatestOrder } = require('../controllers/orderController')
 const { authRole } = require('../MiddleWares/authRole')
 
 const orderRouter = require('express').Router()
@@ -7,6 +7,7 @@ const orderRouter = require('express').Router()
 orderRouter.post('/createOrder', authRole('staff','customer'), createOrder)
 orderRouter.get('/getOrders', authRole('customer','admin','staff'), getOrders)
 orderRouter.get('/getOneOrder/:orderId', authRole('admin','staff','customer'), getOneOrder)
+orderRouter.get('/getLatestOrder',authRole("customer"), getLatestOrder)
 orderRouter.get('/getOrderItems/:orderId', authRole('customer'), getOrderItems)
 orderRouter.put('/updateOrder/:orderId', authRole('admin','staff','customer'), updateOrder)
 orderRouter.put('/updateOrderItems/:orderId', authRole('admin','staff','customer'), updateOrderItems)

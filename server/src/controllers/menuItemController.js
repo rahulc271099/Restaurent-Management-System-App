@@ -109,6 +109,28 @@ const getPopularItems = async (req, res) => {
   }
 };
 
+const updateChefSpecial = async(req,res) =>{
+  try{
+    const {menuItemIds} = req.body
+  if(!menuItemIds || menuItemIds.length === 0){
+    return res.status(400).json({
+      error:"No items found"
+    })
+  }
+  const clearPrevChefSpecial = await menuItemDB.updateMany({},{$set:{chefSpecial:false}})
+  const updatedItems  = await menuItemDB.updateMany(
+    {_id:{$in:menuItemIds}},
+    {$set:{chefSpecial:true}}
+  )
+  const updatedChefSpecial = await menuItemDB.find({chefSpecial:true})
+  res.status(200).json({
+    success:true,
+    data:updatedChefSpecial,
+  })
+  }catch(error){
+    console.log(error);
+  }
+}
 
 const updateMenuItem = async (req, res) => {
   try {
@@ -170,6 +192,7 @@ module.exports = {
   createMenuItem,
   getMenuItems,
   getPopularItems,
+  updateChefSpecial,
   updateMenuItem,
   deleteMenuItem,
 };

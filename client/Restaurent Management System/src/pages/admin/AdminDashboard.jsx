@@ -216,7 +216,7 @@ const AdminDashboard = () => {
               className="bg-slate-800 rounded-md overflow-hidden hover:bg-slate-700 transition-colors cursor-pointer"
             >
               <div className="p-4 flex items-center space-x-4">
-                {/* <img src={item.image} alt={item.name} className="w-12 h-12 rounded object-cover" /> */}
+                <img src={item.image} alt={item.name} className="w-12 h-12 rounded object-cover" />
                 <div>
                   <h3 className="font-semibold">{item.name}</h3>
                   <div className="flex items-center">

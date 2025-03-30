@@ -1,4 +1,4 @@
-const { default: mongoose } = require("mongoose");
+const { default: mongoose, model } = require("mongoose");
 const orderItemDB = require("../Models/orderItemModel");
 const orderDB = require("../Models/orderModel");
 const menuItemDB = require("../Models/menuItemModel");
@@ -9,21 +9,40 @@ const createOrder = async (req, res) => {
     const user_id = req.user.id;
     console.log("Received user_id:", req.user?.id);
     console.log("Received body:", req.body);
-    const { order_type, table_id, total_amount, order_items,delivery_address,contact_info,payment_method,transaction_id,gateway_response } = req.body;
+    const {
+      order_type,
+      table_id,
+      total_amount,
+      tax,
+      order_items,
+      delivery_address,
+      contact_info,
+      transaction_id,
+      gateway_response,
+    } = req.body;
+    let { payment_method } = req.body;
 
     if (
       !user_id ||
       !order_type ||
       !total_amount ||
       !order_items ||
-      order_items.length === 0 ||
-      !contact_info ||
-      !payment_method
+      order_items.length === 0
     ) {
       return res.status(400).json({ error: "Missing required order fields" });
     }
 
-    const orderItemIds = order_items.map((item) => item.item_id);
+    // For delivery orders, contact info is required
+    if (order_type === "delivery" && !contact_info) {
+      return res
+        .status(400)
+        .json({ error: "Contact info is required for delivery orders" });
+    }
+
+    if (order_type === "dine-in") {
+      payment_method = "pay-later";
+    }
+
 
     // Create the order document. Initially, order_items will be an empty array.
     const order = new orderDB({
@@ -31,15 +50,17 @@ const createOrder = async (req, res) => {
       order_type,
       table_id: order_type === "dine-in" ? table_id : undefined,
       total_amount,
-      order_items: orderItemIds,
+      tax,
+      order_items: [],
       delivery_address,
-      contact_info,
+      contact_info: order_type === "delivery" ? contact_info : undefined, // Only set for delivery
       payment_method,
     });
 
     const savedOrder = await order.save();
 
     // Create order items documents for each item provided
+    const orderItemIds = [];
     for (const item of order_items) {
       if (!item.item_id || !item.quantity || !item.price) {
         return res.status(400).json({
@@ -53,18 +74,29 @@ const createOrder = async (req, res) => {
         price: item.price,
       });
       const savedOrderItem = await orderItem.save();
+      orderItemIds.push(savedOrderItem._id); //store the orderItem _id
     }
 
     // Update the order with the array of created order item IDs.
+    savedOrder.order_items = orderItemIds;
     const updatedOrder = await savedOrder.save();
 
     // Create a payment entry after the order is placed
-    const paymentStatus = payment_method === "cash" ? "success" : "pending"; // Cash payments are directly marked as success
+    // const paymentStatus = payment_method === "cash" ? "success" : "pending"; // Cash payments are directly marked as success
+    let paymentStatus;
+    if (order_type === "dine-in") {
+      paymentStatus = payment_method === "pay-later" ? "pending" : "success";
+    } else if (order_type === "takeaway") {
+      paymentStatus = payment_method === "cash" ? "success" : "pending"; // Cash is paid immediately, other methods are pending
+    } else if (order_type === "delivery") {
+      paymentStatus = payment_method === "online" ? "success" : "pending"; // Online payment is instant
+    }
     const payment = new paymentDB({
       order_id: savedOrder._id,
       user_id,
       payment_method,
       amount: total_amount,
+      tax,
       payment_status: paymentStatus,
       transaction_id: transaction_id || null,
       gateway_response: gateway_response || {},
@@ -75,7 +107,7 @@ const createOrder = async (req, res) => {
     return res.status(201).json({
       success: true,
       data: updatedOrder,
-      payment:savedPayment,
+      payment: savedPayment,
     });
   } catch (error) {
     console.error("Error creating order:", error);
@@ -86,17 +118,6 @@ const createOrder = async (req, res) => {
 const getOrders = async (req, res) => {
   try {
     const user_id = req.user.id;
-    // let orders = await orderDB.find({ user_id }).lean(); // Convert to plain JSON
-    // for (let order of orders) {
-    //   order.order_items = await orderItemDB
-    //     .find({ order_id: order._id })
-    //     .populate("item_id", "name price");
-    // }
-
-    // if (req.user.role === "admin") {
-    //   orders = await orderDB.find().populate("user_id", "_id name");
-    // }
-
     let orders;
     if (req.user.role === "admin") {
       orders = await orderDB
@@ -106,7 +127,7 @@ const getOrders = async (req, res) => {
       for (let order of orders) {
         order.order_items = await orderItemDB
           .find({ order_id: order._id })
-          .populate("item_id", "name price");
+          .populate("item_id", "name price image");
       }
     } else {
       orders = await orderDB
@@ -116,7 +137,7 @@ const getOrders = async (req, res) => {
       for (let order of orders) {
         order.order_items = await orderItemDB
           .find({ order_id: order._id })
-          .populate("item_id", "name price");
+          .populate("item_id", "name price image");
       }
     }
 
@@ -146,6 +167,44 @@ const getOneOrder = async (req, res) => {
   } catch (error) {
     console.error("Error creating order:", error);
     return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+const getLatestOrder = async (req, res) => {
+  try {
+    const user_id = req.user.id;
+
+    // Fetch the latest order by sorting in descending order of `createdAt`
+    const latestOrder = await orderDB
+      .findOne({ user_id })
+      .sort({ createdAt: -1 }) // Get the most recent order
+      .populate({
+        path: "order_items", // Order items reference
+        model:"orderItems",
+        populate: {
+          path: "item_id", // Menu item reference inside order_items
+          model: "menuItems", // Make sure this is your correct model name
+          select: "name image price", // Select only necessary fields
+        },
+      })
+      .exec();
+
+    // const latestOrder = await orderDB
+    //   .findOne({ user_id })
+    //   .sort({ createdAt: -1 });
+    // // .populate("order_items") // First populate order_items
+    // // .exec();
+
+    console.log("Latest Order:", latestOrder);
+
+    if (!latestOrder) {
+      return res.status(404).json({ error: "No orders found" });
+    }
+
+    return res.status(200).json({ success: true, data: latestOrder });
+  } catch (error) {
+    console.error("Error fetching latest order:", error);
+    return res.status(500).json({ error: "Internal Server Error" });
   }
 };
 
@@ -332,6 +391,7 @@ module.exports = {
   createOrder,
   getOrders,
   getOneOrder,
+  getLatestOrder,
   getOrderItems,
   updateOrder,
   updateOrderItems,

@@ -10,41 +10,52 @@ import {
 } from "lucide-react";
 import { FiArrowLeft } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
+import { getLatestOrder } from "../../services/orderServices";
 
 const OrderConfirmation = () => {
   const [showAnimation, setShowAnimation] = useState(false);
   const [activeTab, setActiveTab] = useState("summary");
+  const [orderData,setOrderData] = useState(null)
   const navigate = useNavigate();
+
+  useEffect(()=>{
+    getLatestOrder().then(res=>{
+        console.log(res);
+        setOrderData(res.data.data)
+    }).catch(err=>{
+        console.log(err);
+    })
+  },[])
   // Sample order data
-  const orderData = {
-    orderId: "ORD-7829401",
-    orderDate: "March 21, 2025",
-    estimatedDelivery: "March 25-27, 2025",
-    paymentMethod: "Credit Card (•••• 4582)",
-    shippingAddress: "123 Main St, Apt 4B, New York, NY 10001",
-    items: [
-      {
-        id: 1,
-        name: "Premium Wireless Headphones",
-        color: "Midnight Black",
-        price: 149.99,
-        quantity: 1,
-        image: "/api/placeholder/120/120",
-      },
-      {
-        id: 2,
-        name: "Smartphone Fast Charger",
-        color: "White",
-        price: 29.99,
-        quantity: 2,
-        image: "/api/placeholder/120/120",
-      },
-    ],
-    subtotal: 209.97,
-    shipping: 4.99,
-    tax: 17.85,
-    total: 232.81,
-  };
+//   const orderData = {
+//     orderId: "ORD-7829401",
+//     orderDate: "March 21, 2025",
+//     estimatedDelivery: "March 25-27, 2025",
+//     paymentMethod: "Credit Card (•••• 4582)",
+//     shippingAddress: "123 Main St, Apt 4B, New York, NY 10001",
+//     items: [
+//       {
+//         id: 1,
+//         name: "Premium Wireless Headphones",
+//         color: "Midnight Black",
+//         price: 149.99,
+//         quantity: 1,
+//         image: "/api/placeholder/120/120",
+//       },
+//       {
+//         id: 2,
+//         name: "Smartphone Fast Charger",
+//         color: "White",
+//         price: 29.99,
+//         quantity: 2,
+//         image: "/api/placeholder/120/120",
+//       },
+//     ],
+//     subtotal: 209.97,
+//     shipping: 4.99,
+//     tax: 17.85,
+//     total: 232.81,
+//   };
 
   useEffect(() => {
     // Trigger the animation after component mounts
@@ -100,7 +111,7 @@ const OrderConfirmation = () => {
                   : "translate-y-4 opacity-0"
               }`}
             >
-              Thank you for your purchase. Your order #{orderData.orderId} has
+              Thank you for your purchase. Your order #ORD:{orderData ?._id} has
               been confirmed.
             </p>
           </div>
@@ -188,20 +199,20 @@ const OrderConfirmation = () => {
               >
                 <h2 className="text-lg font-semibold mb-4">Items Ordered</h2>
                 <div className="space-y-4">
-                  {orderData.items.map((item) => (
+                  {orderData ?.order_items.map((item) => (
                     <div
-                      key={item.id}
+                      key={item._id}
                       className="flex items-center p-4 bg-gray-50 rounded-lg overflow-hidden"
                     >
                       <div className="w-16 h-16 bg-white rounded-md overflow-hidden flex-shrink-0 border">
                         <img
-                          src={item.image}
-                          alt={item.name}
+                          src={item.item_id.image}
+                          alt={item.item_id.name}
                           className="w-full h-full object-cover"
                         />
                       </div>
                       <div className="ml-4 flex-grow">
-                        <h3 className="font-medium">{item.name}</h3>
+                        <h3 className="font-medium">{item.item_id.name}</h3>
                         <p className="text-sm text-gray-500">
                           Color: {item.color}
                         </p>
@@ -222,19 +233,21 @@ const OrderConfirmation = () => {
                   <div className="space-y-2">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Subtotal</span>
-                      <span>${orderData.subtotal.toFixed(2)}</span>
+                      <span>${orderData ?.total_amount.toFixed(2)}</span>
                     </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Shipping</span>
-                      <span>${orderData.shipping.toFixed(2)}</span>
-                    </div>
+                    {orderData ?.order_type === "delivery" && (
+                        <div className="flex justify-between">
+                        <span className="text-gray-600">shipping</span>
+                        <span>${orderData.shipping.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between">
                       <span className="text-gray-600">Tax</span>
-                      <span>${orderData.tax.toFixed(2)}</span>
+                      <span>${orderData ?.tax.toFixed(2)}</span>
                     </div>
                     <div className="flex justify-between font-bold pt-2 border-t">
                       <span>Total</span>
-                      <span>${orderData.total.toFixed(2)}</span>
+                      <span>${orderData ?.total_amount.toFixed(2)}</span>
                     </div>
                   </div>
                 </div>

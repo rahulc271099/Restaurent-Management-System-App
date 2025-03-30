@@ -166,7 +166,7 @@ const OrderManagement = () => {
                       className="py-4 flex items-center"
                     >
                       <img
-                        src={item.image}
+                        src={item.item_id.image}
                         alt={item.item_id.name}
                         className="h-16 w-16 rounded-md object-cover"
                       />

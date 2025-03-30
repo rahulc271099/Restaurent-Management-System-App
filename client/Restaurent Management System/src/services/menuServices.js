@@ -14,8 +14,8 @@ export const addMenuItems = (menuData) =>{
     return axiosInstance.post('/menuItem/createMenuItem', menuData)
 }
 
-export const updateChefSpecial = (updatedMenuIds) =>{
-    return axiosInstance.put('/menu/update-chef-special', updatedMenuIds)
+export const updateChefSpecial = (menuItemIds) =>{
+    return axiosInstance.put('/menuItem/updateChefSpecial', menuItemIds)
 }
 
 export const updateMenuItem = (updatedData,menuItemId) =>{
