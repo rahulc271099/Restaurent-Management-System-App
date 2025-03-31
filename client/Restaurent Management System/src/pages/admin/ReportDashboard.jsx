@@ -8,13 +8,15 @@ import {
   BarChart2,
   ShoppingBag,
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const ReportDashboard = () => {
   const [selectedReport, setSelectedReport] = useState(null);
-
+  const navigate = useNavigate()
+  
   const reportOptions = [
     {
-      id: "sales",
+      id: "salesReportDashBoard",
       title: "Sales Report",
       description:
         "View sales analytics, product performance, and revenue metrics",
@@ -56,6 +58,7 @@ const ReportDashboard = () => {
 
   const handleReportClick = (reportId) => {
     setSelectedReport(reportId);
+    navigate(`/admin/menu/${reportId}`)
   };
 
   const handleBack = () => {

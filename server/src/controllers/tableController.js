@@ -53,8 +53,9 @@ const getTables = async (req, res) => {
 const updateTable = async (req, res) => {
   try {
     const { tableId } = req.params;
+    console.log(tableId);
     const { name, capacity, status, reservations } = req.body;
-
+    
     const table = await tableDB.findById(tableId);
     if (!table) {
       return res.status(404).json({

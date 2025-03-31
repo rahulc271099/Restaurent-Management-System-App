@@ -160,7 +160,10 @@ const StaffDashBoard = () => {
     const totalAmount = calculateTotal();
     const orderData = {
       order_type: selectedOrderType.toLowerCase(),
-      table_id: selectedTable._id,
+      table_id:
+        selectedOrderType.toLowerCase() === "dine-in"
+          ? selectedTable._id
+          : null,
       total_amount: totalAmount,
       order_items: cart.map((item) => ({
         item_id: item._id,
@@ -285,7 +288,7 @@ const StaffDashBoard = () => {
       {/* Categories Sidebar */}
       <div className="w-1/6 bg-white border-r p-4 overflow-y-auto">
         <div
-          onClick={()=>navigate("orders")}  
+          onClick={() => navigate("orders")}
           className="group cursor-pointer flex items-center 
                  bg-blue-50 border border-blue-100 
                  rounded-lg p-3 mb-4 
@@ -498,78 +501,227 @@ const StaffDashBoard = () => {
             </div>
           </div>
 
-          {/* Cart Items */}
-          <div className="p-4 overflow-y-auto flex-grow max-h-[calc(100vh-300px)]">
-            {cart.length === 0 ? (
-              <div className="text-center text-gray-500 py-10">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  className="h-16 w-16 mx-auto text-gray-300 mb-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
-                </svg>
-                Your cart is empty
-              </div>
-            ) : (
-              cart.map((item) => (
-                <div
-                  key={item.name}
-                  className="flex justify-between items-center mb-3 p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
-                >
-                  <div>
-                    <span className="font-semibold block">{item.name}</span>
-                    <span className="text-gray-600 text-sm">
-                      RM {(item.price * item.quantity).toFixed(2)}
-                    </span>
+          <div className="flex flex-col h-[calc(100%-80px)]">
+            {/* Cart Items */}
+            <div className={`p-4 overflow-y-auto flex-grow ${selectedOrderType.toLowerCase() === "takeaway" ? "max-h-[250px]": "max-h-[180px]"}`}>
+              {cart.length === 0 ? (
+                <div className="text-center text-gray-500 py-10">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-16 w-16 mx-auto text-gray-300 mb-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
+                  Your cart is empty
+                </div>
+              ) : (
+                cart.map((item) => (
+                  <div
+                    key={item.name}
+                    className="flex justify-between items-center mb-3 p-3 bg-gray-100 rounded-lg hover:bg-gray-200 transition"
+                  >
+                    <div>
+                      <span className="font-semibold block">{item.name}</span>
+                      <span className="text-gray-600 text-sm">
+                        RM {(item.price * item.quantity).toFixed(2)}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button
+                        onClick={() => removeFromCart(item)}
+                        className="bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-600 transition"
+                      >
+                        -
+                      </button>
+                      <span className="font-bold">{item.quantity}</span>
+                      <button
+                        onClick={() => addToCart(item)}
+                        className="bg-green-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-green-600 transition"
+                      >
+                        +
+                      </button>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => removeFromCart(item)}
-                      className="bg-red-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-red-600 transition"
-                    >
-                      -
+                ))
+              )}
+            </div>
+
+            {/* Dynamic Sections Based on Order Type */}
+            {selectedOrderType.toLowerCase() === "takeaway" && (
+              <div className="p-4 bg-gray-50 border-t border-gray-200">
+                <h3 className="text-md font-bold mb-3 flex items-center text-gray-700">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5 mr-2 text-blue-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                    />
+                  </svg>
+                  Payment Details
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex space-x-2">
+                    <button className="flex-1 py-2 px-3 border border-gray-300 rounded-md bg-white shadow-sm hover:bg-gray-50 transition flex items-center justify-center">
+                      <span className="text-blue-600 font-medium">Cash</span>
                     </button>
-                    <span className="font-bold">{item.quantity}</span>
-                    <button
-                      onClick={() => addToCart(item)}
-                      className="bg-green-500 text-white w-8 h-8 rounded-full flex items-center justify-center hover:bg-green-600 transition"
-                    >
-                      +
+                    <button className="flex-1 py-2 px-3 border border-gray-300 rounded-md bg-white shadow-sm hover:bg-gray-50 transition flex items-center justify-center">
+                      <span className="text-blue-600 font-medium">Card</span>
+                    </button>
+                    <button className="flex-1 py-2 px-3 border border-gray-300 rounded-md bg-white shadow-sm hover:bg-gray-50 transition flex items-center justify-center">
+                      <span className="text-blue-600 font-medium">
+                        E-Wallet
+                      </span>
                     </button>
                   </div>
                 </div>
-              ))
+              </div>
             )}
-          </div>
 
-          {/* Total and Place Order */}
-          <div className="absolute bottom-0 left-0 right-0 bg-white shadow-2xl p-4 border-t">
-            <div className="flex justify-between items-center mb-4">
-              <span className="text-lg font-semibold">Total</span>
-              <span className="text-2xl font-bold text-blue-600">
-                $ {calculateTotal()}
-              </span>
-            </div>
-            <button
-              className="
+            {selectedOrderType.toLowerCase() === "delivery" && (
+              <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
+                <div className="p-4 bg-gray-50 border-t border-gray-200">
+                  <h3 className="text-md font-bold mb-3 flex items-center text-gray-700">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2 text-blue-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    Delivery Address
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="relative">
+                      <input
+                        type="text"
+                        className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition pl-10 bg-white"
+                        placeholder="Enter delivery address"
+                      />
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5 absolute left-3 top-3.5 text-gray-400"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white"
+                        placeholder="Contact name"
+                      />
+                      <input
+                        type="text"
+                        className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white"
+                        placeholder="Phone number"
+                      />
+                    </div>
+                    <textarea
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition resize-none h-20 bg-white"
+                      placeholder="Delivery instructions (optional)"
+                    ></textarea>
+                  </div>
+                </div>
+
+                <div className="p-4 bg-gray-50 border-t border-gray-200">
+                  <h3 className="text-md font-bold mb-3 flex items-center text-gray-700">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5 mr-2 text-blue-500"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                      />
+                    </svg>
+                    Payment Details
+                  </h3>
+                  <div className="space-y-3">
+                    <div className="flex space-x-2">
+                      <button className="flex-1 py-2 px-3 border border-gray-300 rounded-md bg-white shadow-sm hover:bg-gray-50 transition flex items-center justify-center">
+                        <span className="text-blue-600 font-medium">
+                          Cash on Delivery
+                        </span>
+                      </button>
+                      <button className="flex-1 py-2 px-3 border border-gray-300 rounded-md bg-white shadow-sm hover:bg-gray-50 transition flex items-center justify-center">
+                        <span className="text-blue-600 font-medium">
+                          Online Payment
+                        </span>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Total and Place Order */}
+            <div className="absolute bottom-0 left-0 right-0 bg-white shadow-2xl p-4 border-t">
+              <div className="flex justify-between items-center mb-4">
+                <span className="text-lg font-semibold">Total</span>
+                <span className="text-2xl font-bold text-blue-600">
+                  $ {calculateTotal()}
+                </span>
+              </div>
+              <button
+                className="
         w-full py-3 rounded-lg 
         bg-gradient-to-r from-blue-500 to-purple-600 
         text-white font-bold 
         hover:from-blue-600 hover:to-purple-700 
         transition transform hover:scale-105
       "
-              onClick={handlePlaceOrder}
-            >
-              Place Order
-            </button>
+                onClick={handlePlaceOrder}
+              >
+                Place Order
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -1,47 +1,40 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { getChefSpecial } from "../../services/menuServices";
+import { addToCart } from "../../services/cartServices";
+import { toast } from "react-toastify";
 
 
 const FeaturePage = () => {
 
   const navigate = useNavigate()
-  const dishes = [
-    {
-      id: 1,
-      title: "Truffle Pasta",
-      category: "Chef's Special",
-      description:
-        "Fresh handmade pasta with black truffle, parmesan and butter sauce.",
-      price: "$24",
-      tags: ["Popular", "Seasonal"],
-      image:
-        "https://media.istockphoto.com/id/1181456803/photo/creamy-spaghetti-with-mushroom-creamy-pasta-with-mushroom-spaghetti-pasta-and-mushroom.webp?a=1&b=1&s=612x612&w=0&k=20&c=LD7hwJW_0xVwSwvxfNmdtu9yN4WCNL-6fb3O9S9al3g=",
-    },
-    {
-      id: 2,
-      title: "Herb-Crusted Salmon",
-      category: "Chef's Special",
-      description:
-        "Premium salmon fillet with an aromatic herb crust, served with seasonal vegetables.",
-      price: "$28",
-      tags: ["Gluten-Free", "Healthy"],
-      image:
-        "https://media.istockphoto.com/id/155285187/photo/herb-crusted-salmon.webp?a=1&b=1&s=612x612&w=0&k=20&c=v5lV9h3kMFRAgl2r8zbE6RKbyhGkBC6F2ODGPBkFVHg=",
-    },
-    {
-      id: 3,
-      title: "Chocolate Soufflé",
-      category: "Chef's Special",
-      description:
-        "Classic chocolate soufflé with a molten center, served with vanilla ice cream.",
-      price: "$12",
-      tags: ["Dessert", "Signature"],
-      image:
-        "https://media.istockphoto.com/id/506710908/photo/small-chocolate-mud-cakes.webp?a=1&b=1&s=612x612&w=0&k=20&c=VTtrOqZ5IGJIFUPwvZG4BccQMAROBg6QhzANQFc9wjU=",
-    },
-  ];
-
   const [chefSpecial,setChefSpecial] = useState([])
+
+  useEffect(()=>{
+    getChefSpecial().then(res=>{
+      console.log(res);
+      setChefSpecial(res.data.data)
+    }).catch(err=>{
+      console.log(err);
+    })
+  },[])
+
+  const handleAddToCart = (item) =>{
+      addToCart({
+        menuItemId: item._id,
+        name: item.name,
+        image: item.image,
+        price: item.price, // Optional, if needed
+        quantity: 1, // Default quantity when adding
+      }).then(res=>{
+        console.log(res);
+        toast.success("Item added to cart successfully")
+        navigate("/customer/cart")
+      })
+      .catch(err=>{
+        console.log(err);
+      })
+    }
 
   return (
     <div className="bg-white">
@@ -84,24 +77,24 @@ const FeaturePage = () => {
         {/* Featured dishes */}
         <div className="mt-16">
           <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
-            {dishes.map((dish) => (
-              <div key={dish.id} className="group">
+            {chefSpecial ?.map((item) => (
+              <div key={item._id} className="group">
                 <div className="relative overflow-hidden rounded-2xl mb-5 h-[400px]">
                 <img
                       className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110"
-                      src={dish.image}
-                      alt={dish.title}
+                      src={item.image}
+                      alt={item.name}
                     />
                   <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60"></div>
                   <div className="absolute bottom-0 left-0 right-0 p-4">
                     <span className="text-xl font-bold text-white">
-                      {dish.price}
+                      ${item.price}
                     </span>
                   </div>
 
                   {/* Dish tags */}
                   <div className="absolute top-3 left-3 flex space-x-2">
-                    {dish.tags.map((tag, index) => (
+                    {item.tags.map((tag, index) => (
                       <span
                         key={index}
                         className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-90 text-amber-700"
@@ -114,14 +107,14 @@ const FeaturePage = () => {
 
                 <div className="px-1">
                   <span className="text-amber-600 font-medium text-sm">
-                    {dish.category}
+                    {item.category}
                   </span>
                   <h3 className="mt-1 text-xl font-bold text-gray-900 group-hover:text-amber-600 transition-colors duration-300">
-                    {dish.title}
+                    {item.title}
                   </h3>
-                  <p className="mt-2 text-gray-600">{dish.description}</p>
+                  <p className="mt-2 text-gray-600">{item.description}</p>
 
-                  <button className="mt-4 inline-flex items-center text-amber-700 font-medium hover:text-amber-500 transition-colors">
+                  <button onClick={()=>handleAddToCart(item)} className="mt-4 inline-flex items-center text-amber-700 font-medium hover:text-amber-500 transition-colors">
                     Order now
                     <svg
                       className="ml-1 h-5 w-5"

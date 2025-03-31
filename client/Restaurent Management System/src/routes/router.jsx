@@ -27,6 +27,7 @@ import StaffDashboard from "../pages/staff/StaffDashBoard";
 import TableSelectionPage from "../pages/staff/TableSelection";
 import StaffLayout from "../layout/StaffLayout";
 import StaffOrderManagement from "../pages/staff/StaffOrderManagement";
+import SalesReportDashboard from "../pages/admin/SalesReportDashBoard";
 
 export const router = createBrowserRouter([
   {
@@ -118,6 +119,7 @@ export const router = createBrowserRouter([
           { path: "manageOrders", element: <ManageOrders /> },
           { path: "manageReservations", element: <ManageReservations /> },
           { path: "reports", element: <ReportDashboard /> },
+          {path:"salesReportDashBoard", element: <SalesReportDashboard/>},
         ],
       },
     ],

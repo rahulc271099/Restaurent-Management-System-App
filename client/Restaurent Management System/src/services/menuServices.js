@@ -7,7 +7,7 @@ export const getMenuItems = (filters) =>{
 }
 
 export const getChefSpecial = () =>{
-    return axiosInstance.get('/menu/chefSpecial')
+    return axiosInstance.get('/menuItem/chefSpecial')
 }
 
 export const addMenuItems = (menuData) =>{

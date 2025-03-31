@@ -32,8 +32,6 @@ const createMenuItem = async (req, res) => {
       image: cloudinaryResponse,
       tags,
       chefSpecial,
-      salesCount,
-      rating,
     });
 
     const saved = await newMenuItem.save();
@@ -88,7 +86,7 @@ const getMenuItems = async (req, res) => {
   }
 };
 
-const getPopularItems = async (req, res) => {
+const getChefSpecial = async (req, res) => {
   try {
     const specialItems = await menuItemDB
       .find({ chefSpecial: true, availability: "in-stock" })
@@ -191,7 +189,7 @@ const deleteMenuItem = async (req, res) => {
 module.exports = {
   createMenuItem,
   getMenuItems,
-  getPopularItems,
+  getChefSpecial,
   updateChefSpecial,
   updateMenuItem,
   deleteMenuItem,

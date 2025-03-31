@@ -64,7 +64,7 @@ const ManageTable = () => {
   // Handle edit table
   const handleEditTable = () => {
     const updateTableData = { ...currentTable, ...formData };
-    updateTable(updateTableData, currentTable._id)
+    updateTable( currentTable._id, updateTableData)
       .then((res) => {
         console.log(res);
 

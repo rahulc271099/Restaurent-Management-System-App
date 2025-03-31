@@ -23,8 +23,8 @@ const ManageMenuItems = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [newCategories, setNewCategories] = useState([
-    "appetizer",
     "main course",
+    "appetizer",
     "dessert",
     "beverage",
   ]);
@@ -315,7 +315,7 @@ const ManageMenuItems = () => {
             className="bg-white border border-gray-300 text-gray-900 text-sm rounded-lg px-4 py-2.5"
           >
             <option value="All">All</option> {/* Add "All" as default */}
-            {categories.map((category) => (
+            {newCategories.map((category) => (
               <option key={category} value={category}>
                 {category}
               </option>

@@ -219,8 +219,8 @@ const updateOrder = async (req, res) => {
     // const updatedData = req.body;
     const { status, total_amount } = req.body;
     // Note: If you want to update order items, you might need separate logic for that.
-    // const order = await orderDB.findById(orderId);
     const order = await orderDB.findById(orderId);
+    const previousStatus = order.status; //store previous status
     // console.log(order);
     if (!order) {
       return res.status(404).json({ error: "Order not found" });
@@ -232,6 +232,14 @@ const updateOrder = async (req, res) => {
         new: true,
       }
     );
+    //update sales count
+    if(previousStatus !== "completted" && status.toLowerCase() === "completted"){
+      for(const item of order.order_items){
+        await menuItemDB.findByIdAndUpdate(item.item_id,{
+          $inc:{salesCount:item.quantity}
+        })
+      }
+    }
     return res.status(200).json({
       success: true,
       data: updatedOrder,
