@@ -119,7 +119,7 @@ const CartPage = () => {
                 <div className="flow-root">
                   <ul className="-my-6 divide-y divide-gray-200">
                     {cartItems?.map((item) => (
-                      <li key={item.id} className="py-6 flex">
+                      <li key={item._id} className="py-6 flex">
                         <div className="h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-gray-100">
                           <img
                             src={item.image}

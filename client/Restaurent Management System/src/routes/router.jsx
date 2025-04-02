@@ -28,6 +28,7 @@ import TableSelectionPage from "../pages/staff/TableSelection";
 import StaffLayout from "../layout/StaffLayout";
 import StaffOrderManagement from "../pages/staff/StaffOrderManagement";
 import SalesReportDashboard from "../pages/admin/SalesReportDashBoard";
+import BillingPage from "../pages/admin/BillingPage";
 
 export const router = createBrowserRouter([
   {
@@ -43,13 +44,14 @@ export const router = createBrowserRouter([
     element: <RegisterPage />,
   },
   {
+    // path: "/customer",
+    // element: <CustomerLayout />,
     path: "/customer",
-    element: <CustomerLayout />,
-    // (
-    //   <ProtectedRoute allowedRoles={['customer']}>
-    //     <CustomerLayout />
-    //   </ProtectedRoute>
-    // ),
+    element: (
+      <ProtectedRoute allowedRoles={["customer"]}>
+        <CustomerLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "home",
@@ -119,9 +121,13 @@ export const router = createBrowserRouter([
           { path: "manageOrders", element: <ManageOrders /> },
           { path: "manageReservations", element: <ManageReservations /> },
           { path: "reports", element: <ReportDashboard /> },
-          {path:"salesReportDashBoard", element: <SalesReportDashboard/>},
+          { path: "salesReportDashBoard", element: <SalesReportDashboard /> },
         ],
       },
+      {
+        path:"billingPage",
+        element: <BillingPage/>,
+      }
     ],
   },
   {
@@ -131,7 +137,7 @@ export const router = createBrowserRouter([
         <StaffLayout />
       </ProtectedRoute>
     ),
-    children:[
+    children: [
       {
         path: "",
         element: <StaffDashboard />,
@@ -141,9 +147,9 @@ export const router = createBrowserRouter([
         element: <TableSelectionPage />,
       },
       {
-        path:"orders",
-        element: <StaffOrderManagement/>,
+        path: "orders",
+        element: <StaffOrderManagement />,
       },
-    ]
+    ],
   },
 ]);

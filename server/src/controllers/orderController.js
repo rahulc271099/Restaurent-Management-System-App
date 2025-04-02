@@ -43,7 +43,6 @@ const createOrder = async (req, res) => {
       payment_method = "pay-later";
     }
 
-
     // Create the order document. Initially, order_items will be an empty array.
     const order = new orderDB({
       user_id,
@@ -57,6 +56,13 @@ const createOrder = async (req, res) => {
       payment_method,
     });
 
+    if (payment_method === "card") {
+      // Now update the payment record to link with this order
+      const updatedPayment = await paymentDB.findOneAndUpdate(
+        { transaction_id },
+        { order_id: order._id }
+      );
+    }
     const savedOrder = await order.save();
 
     // Create order items documents for each item provided
@@ -89,20 +95,28 @@ const createOrder = async (req, res) => {
     } else if (order_type === "takeaway") {
       paymentStatus = payment_method === "cash" ? "success" : "pending"; // Cash is paid immediately, other methods are pending
     } else if (order_type === "delivery") {
-      paymentStatus = payment_method === "online" ? "success" : "pending"; // Online payment is instant
+      paymentStatus =
+        payment_method === "online" || payment_method === "card"
+          ? "success"
+          : "pending"; // Online payment is instant
     }
-    const payment = new paymentDB({
-      order_id: savedOrder._id,
-      user_id,
-      payment_method,
-      amount: total_amount,
-      tax,
-      payment_status: paymentStatus,
-      transaction_id: transaction_id || null,
-      gateway_response: gateway_response || {},
-    });
 
-    const savedPayment = await payment.save();
+    let savedPayment = null; // Declare it at the top
+
+    if (payment_method === "cash" || payment_method === "pay-later") {
+      const payment = new paymentDB({
+        order_id: savedOrder._id,
+        user_id,
+        payment_method,
+        amount: total_amount,
+        tax,
+        payment_status: paymentStatus,
+        transaction_id: transaction_id || null,
+        gateway_response: gateway_response || {},
+      });
+
+      savedPayment = await payment.save(); // Assign it here
+    }
 
     return res.status(201).json({
       success: true,
@@ -170,6 +184,104 @@ const getOneOrder = async (req, res) => {
   }
 };
 
+const getPendingOrders = async (req, res) => {
+  try {
+    const pendingOrders = await orderDB.aggregate([
+      {
+        $match: { 
+          order_type: { $in: ["dine-in", "takeaway"] }
+        }
+      },
+      {
+        $lookup: {
+          from: "orderitems",
+          localField: "_id",
+          foreignField: "order_id",
+          as: "orderedItems"
+        }
+      },
+      {
+        $unwind: {
+          path: "$orderedItems",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $lookup: {
+          from: "menuitems",
+          localField: "orderedItems.item_id",
+          foreignField: "_id",
+          as: "menuDetails"
+        }
+      },
+      {
+        $lookup: {
+          from: "tables",
+          localField: "table_id",
+          foreignField: "_id",
+          as: "tableInfo"
+        }
+      },
+      {
+        $lookup: {
+          from: "payments",
+          localField: "_id",
+          foreignField: "order_id",
+          as: "paymentDetails"
+        }
+      },
+      {
+        $unwind: {
+          path: "$menuDetails",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $unwind: {
+          path: "$paymentDetails",
+          preserveNullAndEmptyArrays: true
+        }
+      },
+      {
+        $match: {
+          "paymentDetails.payment_status": "pending" // Only fetch orders with pending payments
+        }
+      },
+      {
+        $group: {
+          _id: "$_id",
+          order_time: { $first: "$order_time" },
+          order_type: { $first: "$order_type" },
+          total_amount: { $first: "$total_amount" },
+          tableInfo: { $first: { $arrayElemAt: ["$tableInfo", 0] } },
+          status: { $first: "$status" },
+          payment_status: { $first: "$paymentDetails.payment_status" },
+          order_items: {
+            $push: {
+              quantity: "$orderedItems.quantity",
+              price: "$orderedItems.price",
+              details: "$menuDetails"
+            }
+          }
+        }
+      }
+    ]);
+
+    if (!pendingOrders.length) {
+      return res.status(404).json({ error: "No pending orders with pending payments found" });
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: pendingOrders
+    });
+  } catch (error) {
+    console.error("Error fetching pending orders:", error);
+    return res.status(500).json({ error: "Internal server error" });
+  }
+};
+
+
 const getLatestOrder = async (req, res) => {
   try {
     const user_id = req.user.id;
@@ -180,7 +292,7 @@ const getLatestOrder = async (req, res) => {
       .sort({ createdAt: -1 }) // Get the most recent order
       .populate({
         path: "order_items", // Order items reference
-        model:"orderItems",
+        model: "orderItems",
         populate: {
           path: "item_id", // Menu item reference inside order_items
           model: "menuItems", // Make sure this is your correct model name
@@ -188,13 +300,6 @@ const getLatestOrder = async (req, res) => {
         },
       })
       .exec();
-
-    // const latestOrder = await orderDB
-    //   .findOne({ user_id })
-    //   .sort({ createdAt: -1 });
-    // // .populate("order_items") // First populate order_items
-    // // .exec();
-
     console.log("Latest Order:", latestOrder);
 
     if (!latestOrder) {
@@ -233,11 +338,14 @@ const updateOrder = async (req, res) => {
       }
     );
     //update sales count
-    if(previousStatus !== "completted" && status.toLowerCase() === "completted"){
-      for(const item of order.order_items){
-        await menuItemDB.findByIdAndUpdate(item.item_id,{
-          $inc:{salesCount:item.quantity}
-        })
+    if (
+      previousStatus !== "completted" &&
+      status.toLowerCase() === "completted"
+    ) {
+      for (const item of order.order_items) {
+        await menuItemDB.findByIdAndUpdate(item.item_id, {
+          $inc: { salesCount: item.quantity },
+        });
       }
     }
     return res.status(200).json({
@@ -399,6 +507,7 @@ module.exports = {
   createOrder,
   getOrders,
   getOneOrder,
+  getPendingOrders,
   getLatestOrder,
   getOrderItems,
   updateOrder,

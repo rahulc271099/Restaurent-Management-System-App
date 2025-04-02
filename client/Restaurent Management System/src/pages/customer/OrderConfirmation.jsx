@@ -238,7 +238,7 @@ const OrderConfirmation = () => {
                     {orderData ?.order_type === "delivery" && (
                         <div className="flex justify-between">
                         <span className="text-gray-600">shipping</span>
-                        <span>${orderData.shipping.toFixed(2)}</span>
+                        {/* <span>${orderData.shipping.toFixed(2)}</span> */}
                       </div>
                     )}
                     <div className="flex justify-between">

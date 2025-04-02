@@ -4,18 +4,20 @@ import { useAuth } from "../../context/AuthContext";
 import { userLogout } from "../../services/userServices";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
+import ThemeToggleButton from "../../components/shared/ThemeToggleButton";
 
 const AdminDashboard = () => {
-
   // State for active order
   const [activeOrder, setActiveOrder] = useState(false);
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [selectedCategory, setSelectedCategory] = useState("All");
+  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'dark');
   const [currentDate, setCurrentDate] = useState("");
-  const {user,logout} = useAuth()
-  const data = user
+  const { user, logout } = useAuth();
+  const data = user;
 
-  const navigate = useNavigate()
+  const navigate = useNavigate();
 
   useEffect(() => {
     getMenuItems()
@@ -43,20 +45,35 @@ const AdminDashboard = () => {
     setCurrentDate(today);
   }, []);
 
+  const handleLogout = () => {
+    userLogout()
+      .then((res) => {
+        console.log(res);
+        logout();
+        navigate("/login");
+        toast.success("User logged out successfully");
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
 
-  const handleLogout = () =>{
-    userLogout().then(res=>{
-      console.log(res);
-      logout()
-      navigate('/login')
-      toast.success("User logged out successfully")
-    }).catch(err=>{
-      console.log(err);
-    })
-  }
- 
+  useEffect(() => {
+    // Apply the theme to the <html> tag
+    document.documentElement.classList.toggle("dark", theme === "dark");
+
+    // Store the theme preference in localStorage
+    localStorage.setItem("theme", theme);
+  }, [theme]); // Run when theme changes
+
+  const filteredItems =
+    selectedCategory === "All"
+      ? menuItems
+      : menuItems.filter((item) => item.category === selectedCategory);
   return (
-    <div className="min-h-screen bg-slate-900 text-gray-100">
+    <div className={`min-h-screen ${
+      theme === "dark" ? "bg-slate-900 text-gray-100" : "bg-white text-black"
+    }`}>
       {/* Header */}
       <header className="bg-slate-800 py-2 px-4 flex justify-between items-center shadow-md">
         <div className="flex items-center">
@@ -84,20 +101,7 @@ const AdminDashboard = () => {
               />
             </svg>
           </button>
-          <button className="p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5 text-yellow-400"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                d="M10 2a1 1 0 011 1v1a1 1 0 11-2 0V3a1 1 0 011-1zm4 8a4 4 0 11-8 0 4 4 0 018 0zm-.464 4.95l.707.707a1 1 0 001.414-1.414l-.707-.707a1 1 0 00-1.414 1.414zm2.12-10.607a1 1 0 010 1.414l-.706.707a1 1 0 11-1.414-1.414l.707-.707a1 1 0 011.414 0zM17 11a1 1 0 100-2h-1a1 1 0 100 2h1zm-7 4a1 1 0 011 1v1a1 1 0 11-2 0v-1a1 1 0 011-1zM5.05 6.464A1 1 0 106.465 5.05l-.708-.707a1 1 0 00-1.414 1.414l.707.707zm1.414 8.486l-.707.707a1 1 0 01-1.414-1.414l.707-.707a1 1 0 011.414 1.414zM4 11a1 1 0 100-2H3a1 1 0 000 2h1z"
-                fillRule="evenodd"
-                clipRule="evenodd"
-              />
-            </svg>
-          </button>
+          <ThemeToggleButton theme={theme} setTheme={setTheme} />
           <button className="p-2 rounded-full bg-slate-700 hover:bg-slate-600 transition-colors">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -128,13 +132,16 @@ const AdminDashboard = () => {
           </button>
 
           <div className="ml-2 space-x-2">
-            <button onClick={()=>navigate("/admin/menu/manageTables")} className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
+            <button
+              onClick={() => navigate("/admin/menu/manageTables")}
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded"
+            >
               Admin Panel
             </button>
             <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
               Sales
             </button>
-            <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
+            <button onClick={()=>navigate("/admin/billingpage")} className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
               Billing
             </button>
             <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
@@ -143,7 +150,10 @@ const AdminDashboard = () => {
             <button className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
               New
             </button>
-            <button onClick={handleLogout} className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded">
+            <button
+              onClick={handleLogout}
+              className="bg-green-500 hover:bg-green-600 text-white px-4 py-1.5 rounded"
+            >
               Logout
             </button>
           </div>
@@ -182,7 +192,7 @@ const AdminDashboard = () => {
                 clipRule="evenodd"
               />
             </svg>
-            <span>{data ? data.name:"admin"}</span>
+            <span>{data ? data.name : "admin"}</span>
           </button>
         </div>
 
@@ -194,29 +204,41 @@ const AdminDashboard = () => {
       {/* Category filters */}
       <div className="px-4 py-3 flex flex-wrap gap-2">
         {categories.length > 0 ? (
-          categories.map((category,index) => (
+          ["All", ...categories].map((category, index) => (
             <button
               key={index}
-              className="px-3 py-2 bg-slate-800 hover:bg-slate-700 rounded text-sm"
+              onClick={() => setSelectedCategory(category)}
+              className={`px-3 py-2 rounded-lg text-sm border border-green-600 text-green-400 transition 
+                ${
+                  selectedCategory === category
+                    ? "bg-green-400/10 text-white border-green-500" // Active Category
+                    : "bg-transparent" // Default Style
+                }`}
             >
               {category}
             </button>
           ))
-        ): (
-          <p className="text-center text-gray-600 col-span-3">No categories found</p>
+        ) : (
+          <p className="text-center text-gray-600 col-span-3">
+            No categories found
+          </p>
         )}
       </div>
 
       {/* Menu items grid */}
       <div className="p-4 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-        {menuItems.length > 0 ? (
-          menuItems.map((item) => (
+        {filteredItems.length > 0 ? (
+          filteredItems.map((item) => (
             <div
               key={item._id}
               className="bg-slate-800 rounded-md overflow-hidden hover:bg-slate-700 transition-colors cursor-pointer"
             >
               <div className="p-4 flex items-center space-x-4">
-                <img src={item.image} alt={item.name} className="w-12 h-12 rounded object-cover" />
+                <img
+                  src={item.image}
+                  alt={item.name}
+                  className="w-12 h-12 rounded object-cover"
+                />
                 <div>
                   <h3 className="font-semibold">{item.name}</h3>
                   <div className="flex items-center">

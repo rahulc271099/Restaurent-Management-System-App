@@ -3,6 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 import { getCart } from "../../services/cartServices";
 import { createOrder } from "../../services/orderServices";
+import { loadStripe } from "@stripe/stripe-js";
+import CheckoutForm from "../../components/shared/CheckOutForm";
+
+const stripePromise = loadStripe(import.meta.env.STRIPE_PUBLISHABLE_KEY); // Replace with your Stripe key
 
 const OrderPage = () => {
   const navigate = useNavigate();
@@ -13,6 +17,7 @@ const OrderPage = () => {
   const [cartItems, setCartItems] = useState([]);
   const [orderType, setOrderType] = useState(initialOrderType);
   const [paymentMethod, setPaymentMethod] = useState("card");
+  const [loading, setLoading] = useState(false);
   const [deliveryAddress, setDeliveryAddress] = useState({
     street: "",
     city: "",
@@ -25,6 +30,9 @@ const OrderPage = () => {
     phone: "",
     email: "",
   });
+  const [orderId, setOrderId] = useState(null);
+  const [showPayment, setShowPayment] = useState(false);
+  const [userId, setUserId] = useState(null);
 
   // Calculate totals
   const subtotal = cartItems.reduce(
@@ -45,33 +53,84 @@ const OrderPage = () => {
   };
 
   const handlePlaceOrder = () => {
-    const orderItems = cartItems.map(item => ({
-      item_id: item.menuItemId,  // Renaming menuItemId to item_id
+    const orderItems = cartItems.map((item) => ({
+      item_id: item.menuItemId, // Renaming menuItemId to item_id
       name: item.name,
       price: item.price,
-      quantity: item.quantity
+      quantity: item.quantity,
     }));
 
     const orderData = {
-      order_items:orderItems,
-      order_type:orderType,
-      payment_method:paymentMethod,
+      order_items: orderItems,
+      order_type: orderType,
+      payment_method: paymentMethod,
       delivery_address: orderType === "delivery" ? deliveryAddress : null, // Only if delivery
-      contact_info:contactInfo,
+      contact_info: contactInfo,
       subtotal,
       deliveryFee,
       tax,
-      total_amount:total,
+      total_amount: total,
     };
-    createOrder(orderData).then(res=>{
-      console.log(res);
-      toast.success("Your order has been placed successfully!");
-    }).catch(err=>{
-      console.log(err);
-    })
-    setTimeout(() => {
-      navigate("/customer/orderConfirmation");
-    }, 1500);
+
+    if (paymentMethod === "cash") {
+      createOrder(orderData)
+        .then((res) => {
+          console.log(res);
+          setOrderId(res.data.data._id);
+          setUserId(res.data.data.user_id);
+          if (paymentMethod === "cash") {
+            toast.success("Your order has been placed successfully!");
+            return;
+          }
+
+          setShowPayment(true);
+        })
+        .catch((err) => {
+          console.log(err);
+        });
+      setTimeout(() => {
+        navigate("/customer/orderConfirmation");
+      }, 1500);
+    } else if (paymentMethod === "card") {
+      setShowPayment(true);
+    }
+  };
+
+  const handleSuccessfulPayment = async (paymentIntent) => {
+    try {
+      const orderItems = cartItems.map((item) => ({
+        item_id: item.menuItemId,
+        name: item.name,
+        price: item.price,
+        quantity: item.quantity,
+      }));
+
+      const orderData = {
+        order_items: orderItems,
+        order_type: orderType,
+        payment_method: "card",
+        payment_status: "success", // Mark as paid
+        transaction_id: paymentIntent.id, // Store Stripe transaction ID
+        delivery_address: orderType === "delivery" ? deliveryAddress : null,
+        contact_info: contactInfo,
+        subtotal,
+        deliveryFee,
+        tax,
+        total_amount: total,
+      };
+
+      const response = await createOrder(orderData);
+
+      if (response.status === 201) {
+        toast.success("Payment successful! Order placed.");
+        navigate("/customer/orderConfirmation");
+      } else {
+        toast.error("Payment was successful, but order creation failed!");
+      }
+    } catch (error) {
+      console.error("Order creation failed:", error);
+      toast.error("Something went wrong!");
+    }
   };
 
   const handleOrderTypeChange = (type) => {
@@ -344,42 +403,6 @@ const OrderPage = () => {
                   </label>
                 </div>
 
-                {paymentMethod === "card" && (
-                  <div className="ml-7 mt-3 grid grid-cols-1 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        Card Number
-                      </label>
-                      <input
-                        type="text"
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500"
-                        placeholder="1234 5678 9012 3456"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          Expiration Date
-                        </label>
-                        <input
-                          type="text"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500"
-                          placeholder="MM/YY"
-                        />
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-1">
-                          CVV
-                        </label>
-                        <input
-                          type="text"
-                          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-amber-500 focus:border-amber-500"
-                          placeholder="123"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
                 <div className="flex items-center mt-4">
                   <input
                     id="cash"
@@ -442,12 +465,24 @@ const OrderPage = () => {
                   <p>${total.toFixed(2)}</p>
                 </div>
               </div>
-              <button
-                onClick={handlePlaceOrder}
-                className="mt-6 w-full bg-amber-600 text-white py-3 rounded-lg font-medium hover:bg-amber-700 transition"
-              >
-                Place Order
-              </button>
+
+              {paymentMethod === "cash" && (
+                <button
+                  onClick={handlePlaceOrder}
+                  className="mt-6 w-full bg-amber-600 text-white py-3 rounded-lg font-medium hover:bg-amber-700 transition"
+                >
+                  {loading ? "Processing..." : "Place Order"}
+                </button>
+              )}
+
+              {/* Show Stripe form only if the payment method is "card" */}
+              {paymentMethod === "card" && (
+                <CheckoutForm
+                  amount={total}
+                  userId={userId}
+                  onPaymentSuccess={handleSuccessfulPayment}
+                />
+              )}
             </div>
           </div>
         </div>
