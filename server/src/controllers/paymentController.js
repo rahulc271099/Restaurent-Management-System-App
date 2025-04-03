@@ -1,3 +1,4 @@
+const orderDB = require("../Models/orderModel");
 const paymentDB = require("../Models/paymentModel");
 // const Stripe = require("stripe");
 // const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -55,35 +56,37 @@ const confirmPayment = async (req, res) => {
   }
 };
 
-const updatePaymentStatus = async (req, res) => {
-    try {
-      const { orderId } = req.params; // Get order ID from URL params
-      const { newStatus } = req.body; // New payment status (e.g., "completed")
-  
-      if (!newStatus) {
-        return res.status(400).json({ error: "Payment status is required" });
-      }
-  
-      // Update the payment status in the "payments" collection
-      const updatedPayment = await paymentDB.findOneAndUpdate(
-        { order_id: orderId }, // Find payment by order ID
-        { $set: { payment_status: newStatus } }, // Update status
-        { new: true } // Return updated document
-      );
-  
-      if (!updatedPayment) {
-        return res.status(404).json({ error: "Payment record not found" });
-      }
-  
-      res.status(200).json({
-        success: true,
-        message: "Payment status updated successfully",
-        data: updatedPayment,
-      });
-    } catch (error) {
-      console.error("Error updating payment status:", error);
-      res.status(500).json({ success: false, error: "Internal server error" });
-    }
-  };
+const updatePayment = async (req, res) => {
+  try {
+    const { orderId } = req.params; // Get order ID from URL params
+    const { payment_method, transaction_id, gateway_response, payment_status } =
+      req.body;
 
-module.exports = { createPaymentIntent, confirmPayment, updatePaymentStatus};
+    const orderExists = await orderDB.findById(orderId);
+    if (!orderExists) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Update the payment status in the "payments" collection
+    const updatedPayment = await paymentDB.findOneAndUpdate(
+      { order_id: orderId }, // Find payment by order ID
+      { payment_method, transaction_id, gateway_response, payment_status }, // Update status
+      { new: true } // Return updated document
+    );
+
+    if (!updatedPayment) {
+      return res.status(404).json({ error: "Payment record not found" });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Payment status updated successfully",
+      data: updatedPayment,
+    });
+  } catch (error) {
+    console.error("Error updating payment status:", error);
+    res.status(500).json({ success: false, error: "Internal server error" });
+  }
+};
+
+module.exports = { createPaymentIntent, confirmPayment, updatePayment };

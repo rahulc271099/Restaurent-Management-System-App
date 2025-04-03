@@ -111,6 +111,7 @@ const OrderPage = () => {
         payment_method: "card",
         payment_status: "success", // Mark as paid
         transaction_id: paymentIntent.id, // Store Stripe transaction ID
+        gateway_response:paymentIntent,
         delivery_address: orderType === "delivery" ? deliveryAddress : null,
         contact_info: contactInfo,
         subtotal,

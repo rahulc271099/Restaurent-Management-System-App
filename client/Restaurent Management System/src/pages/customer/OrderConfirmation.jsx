@@ -26,36 +26,6 @@ const OrderConfirmation = () => {
         console.log(err);
     })
   },[])
-  // Sample order data
-//   const orderData = {
-//     orderId: "ORD-7829401",
-//     orderDate: "March 21, 2025",
-//     estimatedDelivery: "March 25-27, 2025",
-//     paymentMethod: "Credit Card (•••• 4582)",
-//     shippingAddress: "123 Main St, Apt 4B, New York, NY 10001",
-//     items: [
-//       {
-//         id: 1,
-//         name: "Premium Wireless Headphones",
-//         color: "Midnight Black",
-//         price: 149.99,
-//         quantity: 1,
-//         image: "/api/placeholder/120/120",
-//       },
-//       {
-//         id: 2,
-//         name: "Smartphone Fast Charger",
-//         color: "White",
-//         price: 29.99,
-//         quantity: 2,
-//         image: "/api/placeholder/120/120",
-//       },
-//     ],
-//     subtotal: 209.97,
-//     shipping: 4.99,
-//     tax: 17.85,
-//     total: 232.81,
-//   };
 
   useEffect(() => {
     // Trigger the animation after component mounts

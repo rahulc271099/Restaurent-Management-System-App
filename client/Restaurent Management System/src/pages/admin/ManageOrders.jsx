@@ -77,15 +77,6 @@ const ManageOrders = () => {
   // Handle edit order
   const handleEditOrder = async () => {
     try {
-      // Convert menu_items to order_items
-      // const formattedOrderData = {
-      //   ...formData,
-      //   order_items: formData.menu_items, // Rename menu_items to order_items
-      // };
-
-      // delete formattedOrderData.menu_items; // Remove menu_items to avoid duplication
-
-      // Update Order Details
       await updateOrder(
         { status: formData.status, total_amount: formData.total_amount },
         currentOrder._id
@@ -117,7 +108,7 @@ const ManageOrders = () => {
 
   // Handle delete order
   const handleDeleteOrder = () => {
-    deleteOrder()
+    deleteOrder(currentOrder._id)
       .then((res) => {
         console.log(res);
         return getOrders();
@@ -687,7 +678,7 @@ const ManageOrders = () => {
                 Cancel
               </button>
               <button
-                onClick={handleDeleteOrder}
+                onClick={()=>handleDeleteOrder(currentOrder._id)}
                 className="bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg text-sm px-5 py-2.5"
               >
                 Delete

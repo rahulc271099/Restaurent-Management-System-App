@@ -10,6 +10,7 @@ import {
   Sandwich,
   ClipboardList,
   CoffeeIcon,
+  Menu,
 } from "lucide-react";
 import { MapPin, ShoppingBag, X } from "lucide-react";
 import { getMenuItems } from "../../services/menuServices";
@@ -17,6 +18,8 @@ import { createOrder } from "../../services/orderServices";
 import { toast } from "react-toastify";
 import { useLocation, useNavigate } from "react-router-dom";
 import { updateTable } from "../../services/tableServices";
+import { userLogout } from "../../services/userServices";
+import { useAuth } from "../../context/AuthContext";
 
 const menuCategories = [
   {
@@ -110,6 +113,8 @@ const StaffDashBoard = () => {
   const [orderTypeModalOpen, setOrderTypeModalOpen] = useState(false);
   const selectedTable = location.state || null;
   const [selectedOrderType, setSelectedOrderType] = useState(null);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const {logout} = useAuth()
 
   useEffect(() => {
     console.log("selected table:", selectedTable);
@@ -203,6 +208,20 @@ const StaffDashBoard = () => {
       });
   };
 
+  //   handle logout
+  const handleLogout = () => {
+    userLogout()
+      .then((res) => {
+        console.log(res);
+        logout();
+        navigate("/login");
+        toast.success("User logged out successfully");
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
   //   order type selection
   const handleOrderTypeSelect = (type) => {
     console.log("Order Type Selected:", type);
@@ -251,7 +270,7 @@ const StaffDashBoard = () => {
       );
 
       if (existingItem) {
-        // ✅ Use .map() properly to update the quantity
+        //update the quantity
         return prevCart.map((cartItem) =>
           cartItem._id === item._id
             ? { ...cartItem, quantity: cartItem.quantity + 1 }
@@ -286,54 +305,106 @@ const StaffDashBoard = () => {
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Categories Sidebar */}
-      <div className="w-1/6 bg-white border-r p-4 overflow-y-auto">
+      <div className="sm:w-20 md:w-1/6 bg-white border-r p-4 overflow-y-auto">
+        <Menu
+          onClick={() => setSidebarOpen(true)}
+          className="md:block lg:hidden p-2 fixed top-4 left-4 z-50 bg-white shadow-lg rounded-full size-10"
+        />
         <div
-          onClick={() => navigate("orders")}
-          className="group cursor-pointer flex items-center 
+          className={`bg-white border-r p-4 overflow-y-auto shadow-lg
+                    w-full h-full hidden lg:block transition-all duration-300`}
+        >
+          <div
+            onClick={() => navigate("orders")}
+            className="group cursor-pointer flex items-center 
                  bg-blue-50 border border-blue-100 
                  rounded-lg p-3 mb-4 
                  hover:bg-blue-100 hover:shadow-md 
                  transition-all duration-300"
-        >
-          <div className="flex items-center space-x-3">
-            <ClipboardList
-              className="text-blue-600 w-6 h-6 
+          >
+            <div className="flex items-center space-x-3">
+              <ClipboardList
+                className="text-blue-600 w-6 h-6 
                      group-hover:text-blue-700 
                      group-hover:rotate-6 
                      transition-transform duration-300"
-            />
-            <span
-              className="font-semibold text-blue-800 
+              />
+              <span
+                className="font-semibold text-blue-800 
                          group-hover:text-blue-900 
                          transition-colors duration-300"
-            >
-              Orders
-            </span>
+              >
+                Orders
+              </span>
+            </div>
           </div>
+          <h2 className="text-xl font-bold mb-4">Categories</h2>
+          {menuItems.map((category) => (
+            <button
+              key={category.name}
+              className={`w-full flex items-center p-3 mb-2 rounded-lg ${
+                selectedCategory.name === category.name
+                  ? "bg-blue-500 text-white"
+                  : "hover:bg-blue-100"
+              }`}
+              onClick={() => setSelectedCategory(category)}
+            >
+              <span className="mr-3">{category.icon}</span>
+              {/* <span className="hidden lg:inline-block">{category.name}</span> */}
+              {category.name}
+            </button>
+          ))}
         </div>
-        <h2 className="text-xl font-bold mb-4">Categories</h2>
-        {menuItems.map((category) => (
+
+        {/* Mobile Sidebar (Hidden by Default) */}
+        <div
+          className={`fixed inset-y-0 left-0 w-64 bg-white border-r p-4 overflow-y-auto shadow-lg
+                    transform ${
+                      sidebarOpen ? "translate-x-0" : "-translate-x-full"
+                    } 
+                    transition-transform duration-300 ease-in-out
+                    lg:hidden z-50`}
+        >
+          {/* Close Button for Mobile */}
           <button
-            key={category.name}
-            className={`w-full flex items-center p-3 mb-2 rounded-lg ${
-              selectedCategory.name === category.name
-                ? "bg-blue-500 text-white"
-                : "hover:bg-blue-100"
-            }`}
-            onClick={() => setSelectedCategory(category)}
+            onClick={() => setSidebarOpen(false)}
+            className="absolute top-4 right-4"
           >
-            <span className="mr-3">{category.icon}</span>
-            {category.name}
+            ✕
           </button>
-        ))}
+          <h2 className="text-xl font-bold mb-4">Categories</h2>
+          {menuItems.map((category) => (
+            <button
+              key={category.name}
+              className={`w-full flex items-center p-3 mb-2 rounded-lg ${
+                selectedCategory.name === category.name
+                  ? "bg-blue-500 text-white"
+                  : "hover:bg-blue-100"
+              }`}
+              onClick={() => setSelectedCategory(category)}
+            >
+              <span className="mr-3">{category.icon}</span>
+              {category.name}
+            </button>
+          ))}
+        </div>
       </div>
       {/* Open Order Button */}
       <div>
         <button
-          className="fixed top-4 right-4 bg-blue-500 text-white px-6 py-2 rounded shadow-lg"
+          className="fixed top-4 right-40 bg-blue-500 text-white px-6 py-2 rounded shadow-lg"
           onClick={() => setOrderTypeModalOpen(true)}
         >
           New
+        </button>
+      </div>
+
+      <div>
+        <button
+          className="fixed top-4 right-4 bg-amber-500 text-white px-6 py-2 rounded-full shadow-lg"
+          onClick={handleLogout}
+        >
+          Logout
         </button>
       </div>
 
@@ -346,7 +417,7 @@ const StaffDashBoard = () => {
         <h2 className="text-2xl font-bold mb-4">{selectedCategory.name}</h2>
         <div
           className={`grid ${
-            isOrderOpen ? "grid-cols-2" : "grid-cols-3"
+            isOrderOpen ? "grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"
           } gap-4`}
         >
           {menuItems
@@ -503,7 +574,13 @@ const StaffDashBoard = () => {
 
           <div className="flex flex-col h-[calc(100%-80px)]">
             {/* Cart Items */}
-            <div className={`p-4 overflow-y-auto flex-grow ${selectedOrderType.toLowerCase() === "takeaway" ? "max-h-[250px]": "max-h-[180px]"}`}>
+            <div
+              className={`p-4 overflow-y-auto flex-grow ${
+                selectedOrderType ?.toLowerCase() === "takeaway"
+                  ? "max-h-[250px]"
+                  : "max-h-[180px]"
+              }`}
+            >
               {cart.length === 0 ? (
                 <div className="text-center text-gray-500 py-10">
                   <svg
@@ -555,7 +632,7 @@ const StaffDashBoard = () => {
             </div>
 
             {/* Dynamic Sections Based on Order Type */}
-            {selectedOrderType.toLowerCase() === "takeaway" && (
+            {selectedOrderType ?.toLowerCase() === "takeaway" && (
               <div className="p-4 bg-gray-50 border-t border-gray-200">
                 <h3 className="text-md font-bold mb-3 flex items-center text-gray-700">
                   <svg

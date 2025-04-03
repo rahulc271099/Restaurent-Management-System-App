@@ -8,25 +8,100 @@ import {
   Clock,
   User,
   Menu,
+  X,
 } from "lucide-react";
-import { getPendingOrders } from "../../services/orderServices";
+import { getPendingOrders, updateOrder } from "../../services/orderServices";
+import { FiArrowLeft } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
+import CheckoutForm from "../../components/shared/CheckOutForm";
+import { updatePayment } from "../../services/paymentServices";
+import { updateTable } from "../../services/tableServices";
 
 const BillingPage = () => {
-  const [orders,setOrders] = useState([])  
-  useEffect(()=>{
-    getPendingOrders().then(res=>{
-        console.log(res);
-        setOrders(res.data.data)
-    }).catch(err=>{
-        console.log(err);
-    })
-  },[])
-
-  // State for filtering and search
+  const [orders, setOrders] = useState([]);
   const [filterType, setFilterType] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
-  // Track which orders have expanded item lists
   const [expandedOrders, setExpandedOrders] = useState({});
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("");
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    getPendingOrders()
+      .then((res) => {
+        console.log(res);
+        setOrders(res.data.data);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  }, []);
+
+  const handlePaymentSubmission = (order) => {
+    const orderStatus = "completed"; // For updating order status
+    const tableStatus = "available";
+    const tableId = order.tableInfo._id;
+    const updatedData = {
+      payment_method: "cash",
+      payment_status: "success",
+    };
+    const orderId = order._id;
+    updatePayment(orderId, updatedData)
+      .then(() => updateOrder({ status: orderStatus }, orderId)) // Update order status
+      .then(() =>
+        Promise.all([
+          updateTable(tableId, { status: tableStatus }),
+          getPendingOrders(),
+        ])
+      ) // Run updates in parallel
+      .then(([_, response]) => {
+        console.log(response);
+        setOrders(response.data.data);
+        setPaymentModalOpen(false);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
+
+  const handleCardPayment = (order,paymentIntent) => {
+    const orderStatus = "completed"; // For updating order status
+    const tableStatus = "available";
+    const tableId = order.tableInfo._id;
+    const updatedData = {
+      payment_method: "card",
+      payment_status: "success",
+      transaction_id: paymentIntent.id,
+      gateway_response: paymentIntent,
+    };
+    const orderId = order._id;
+    // updatePayment(orderId, updatedData)
+    //   .then((res) => {
+    //     console.log(res);
+    //     return getPendingOrders();
+    //   })
+    //   .catch((response) => {
+    //     console.log(response);
+    //     setOrders(response.data.data);
+    //   })
+    //   .catch((err) => {
+    //     console.log(err);
+    //   });
+    updatePayment(orderId, updatedData)
+      .then(() => updateOrder({ status: orderStatus }, orderId))
+      .then(() =>
+        Promise.all([
+          updateTable(tableId, { status: tableStatus }),
+          getPendingOrders(),
+        ])
+      ) // Runs both in parallel
+      .then(([_, response]) => {
+        setOrders(response.data.data);
+        setPaymentModalOpen(false);
+      })
+      .catch((err) => console.log(err));
+  };
 
   // Toggle item visibility for a specific order
   const toggleOrderItems = (orderId) => {
@@ -43,18 +118,30 @@ const BillingPage = () => {
       searchQuery === "" ||
       order._id.includes(searchQuery) ||
       (order.table_info.name &&
-        order.table_info.name.toLowerCase().includes(searchQuery.toLowerCase()));
+        order.table_info.name
+          .toLowerCase()
+          .includes(searchQuery.toLowerCase()));
 
     return matchesType && matchesSearch;
   });
 
   return (
     <div className="flex flex-col min-h-screen bg-gray-50">
+      {/* Floating back button */}
+      <div className="fixed top-4 left-4 z-10">
+        <button
+          onClick={() => navigate("/admin")}
+          className="flex items-center bg-white  border-2 text-gray-700 hover:text-gray-900 py-2 px-4 rounded-full shadow-md transition-all hover:shadow-lg"
+        >
+          <FiArrowLeft size={18} className="mr-2" />
+          <span>Back to Home</span>
+        </button>
+      </div>
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 p-4 flex items-center justify-between shadow-sm">
+      <header className="bg-white border-b border-gray-200 p-4 flex items-center justify-between shadow-sm mt-10">
         <h1 className="text-xl font-bold text-gray-800">Restaurant Billing</h1>
         <div className="flex items-center gap-4">
-          <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all flex items-center gap-2">
+          <button className="px-4 py-2 bg-amber-500 text-white rounded-lg hover:bg-amber-400 hover:shadow-lg transition-all flex items-center gap-2">
             <span>New Order</span>
           </button>
         </div>
@@ -125,7 +212,9 @@ const BillingPage = () => {
               {/* Order Header */}
               <div className="p-4 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
                 <div>
-                  <div className="font-bold text-gray-800">ORD: {order._id}</div>
+                  <div className="font-bold text-gray-800">
+                    ORD: {order._id}
+                  </div>
                   <div className="text-sm text-gray-500">
                     {order.tableInfo.name
                       ? order.tableInfo.name
@@ -137,7 +226,9 @@ const BillingPage = () => {
                 <div className="flex flex-col items-end">
                   <div className="flex items-center gap-1">
                     <Clock className="h-4 w-4 text-gray-400" />
-                    <span className="text-sm text-gray-500">{order.order_time}</span>
+                    <span className="text-sm text-gray-500">
+                      {new Date(order.order_time).toLocaleString()}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -147,7 +238,7 @@ const BillingPage = () => {
                 <div className="flex items-center gap-2">
                   <Menu className="h-5 w-5 text-gray-500" />
                   <span className="font-medium">
-                    {order.order_items ?.length} items
+                    {order.order_items?.length} items
                   </span>
                 </div>
                 <button
@@ -192,10 +283,93 @@ const BillingPage = () => {
                         </div>
                       </div>
                       <div className="font-medium text-gray-800">
-                        ${item.price ?.toFixed(2)}
+                        ${item.price?.toFixed(2)}
                       </div>
                     </div>
                   ))}
+                </div>
+              )}
+              {/* payment option   */}
+              {paymentModalOpen && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                  <div className="bg-white rounded-2xl shadow-lg p-6 w-1/2 relative">
+                    {/* Close Button */}
+                    <button
+                      onClick={() => setPaymentModalOpen(false)}
+                      className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+                    >
+                      <X className="h-6 w-6" />
+                    </button>
+
+                    {/* Modal Content */}
+                    <h2 className="text-lg font-semibold mb-4">
+                      Select Payment Method
+                    </h2>
+                    <div className="space-y-4">
+                      {/* Card Payment Option */}
+                      <div className="flex items-center">
+                        <input
+                          id="card"
+                          name="paymentMethod"
+                          type="radio"
+                          checked={paymentMethod === "card"}
+                          onChange={() => setPaymentMethod("card")}
+                          className="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500"
+                        />
+                        <label
+                          htmlFor="card"
+                          className="ml-3 flex items-center"
+                        >
+                          <span className="text-gray-700 mr-3">
+                            Credit/Debit Card
+                          </span>
+                          <div className="flex space-x-1">
+                            <div className="h-6 w-10 bg-blue-600 rounded">
+                              <div className="h-3 w-3 bg-white rounded-full mt-1 ml-1"></div>
+                            </div>
+                            <div className="h-6 w-10 bg-red-500 rounded-sm flex items-center justify-center">
+                              <div className="h-4 w-4 bg-yellow-400 rounded-full"></div>
+                            </div>
+                            <div className="h-6 w-10 bg-gray-800 rounded-sm"></div>
+                          </div>
+                        </label>
+                      </div>
+
+                      {paymentMethod === "card" && (
+                        <CheckoutForm
+                          amount={order.total_amount}
+                          onPaymentSuccess={(paymentIntent) => handleCardPayment(order, paymentIntent)}
+                        />
+                      )}
+
+                      {/* Cash Payment Option */}
+                      <div className="flex items-center mt-4">
+                        <input
+                          id="cash"
+                          name="paymentMethod"
+                          type="radio"
+                          checked={paymentMethod === "cash"}
+                          onChange={() => setPaymentMethod("cash")}
+                          className="h-4 w-4 text-amber-600 border-gray-300 focus:ring-amber-500"
+                        />
+                        <label htmlFor="cash" className="ml-3 text-gray-700">
+                          Cash/Pickup
+                        </label>
+                      </div>
+                    </div>
+
+                    {/* Confirm Button */}
+                    {paymentMethod === "cash" && (
+                      <div className="mt-6 flex justify-end">
+                        <button
+                          onClick={() => handlePaymentSubmission(order)}
+                          className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-all"
+                        >
+                          Confirm Payment
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -204,11 +378,14 @@ const BillingPage = () => {
                 <div>
                   <div className="text-sm text-gray-500">Total Amount</div>
                   <div className="font-bold text-lg">
-                    ${order.total_amount ?.toFixed(2)}
+                    ${order.total_amount?.toFixed(2)}
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all">
+                  <button
+                    onClick={() => setPaymentModalOpen(true)}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-all"
+                  >
                     Pay
                   </button>
                   <button className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-all">

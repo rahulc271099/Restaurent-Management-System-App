@@ -13,7 +13,7 @@ orderRouter.get('/getOrderItems/:orderId', authRole('customer'), getOrderItems)
 orderRouter.put('/updateOrder/:orderId', authRole('admin','staff','customer'), updateOrder)
 orderRouter.put('/updateOrderItems/:orderId', authRole('admin','staff','customer'), updateOrderItems)
 orderRouter.delete('/removeOrderItem/:orderId/:orderItemId', authRole('customer','staff'), deleteOrderItem)
-orderRouter.delete('/removeOrder/:orderId', authRole('staff','customer'), deleteOrder)
+orderRouter.delete('/removeOrder/:orderId', authRole('staff','customer','admin'), deleteOrder)
 
 
 module.exports = orderRouter
