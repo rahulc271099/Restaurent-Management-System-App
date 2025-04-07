@@ -29,6 +29,7 @@ const login = async (req, res) => {
   res.cookie("token", token, {
     httpOnly: true, // ✅ Prevents XSS attacks
     secure: process.env.NODE_ENV === "production", // ✅ Uses HTTPS in production
+    sameSite: "None",
     path: "/", // Make the cookie available site-wide
     maxAge: 24 * 60 * 60 * 1000,
   });
