@@ -10,6 +10,10 @@ export const getPendingOrders = () =>{
     return axiosInstance.get('/order/getPendingOrders')
 }
 
+export const getNewOrders = () =>{
+    return axiosInstance.get('/order/getNewOrders')
+}
+
 export const getLatestOrder = () =>{
     return axiosInstance.get('/order/getLatestOrder')
 }

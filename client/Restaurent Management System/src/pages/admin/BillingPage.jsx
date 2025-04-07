@@ -41,7 +41,7 @@ const BillingPage = () => {
   const handlePaymentSubmission = (order) => {
     const orderStatus = "completed"; // For updating order status
     const tableStatus = "available";
-    const tableId = order.tableInfo._id;
+    const tableId = order.tableInfo?._id;
     const updatedData = {
       payment_method: "cash",
       payment_status: "success",
@@ -49,12 +49,12 @@ const BillingPage = () => {
     const orderId = order._id;
     updatePayment(orderId, updatedData)
       .then(() => updateOrder({ status: orderStatus }, orderId)) // Update order status
-      .then(() =>
-        Promise.all([
-          updateTable(tableId, { status: tableStatus }),
-          getPendingOrders(),
-        ])
-      ) // Run updates in parallel
+      .then(() => {
+        const tableUpdatePromise = tableId
+          ? updateTable(tableId, { status: tableStatus })
+          : Promise.resolve();
+        Promise.all([tableUpdatePromise, getPendingOrders()]);
+      }) // Run updates in parallel
       .then(([_, response]) => {
         console.log(response);
         setOrders(response.data.data);
@@ -65,7 +65,7 @@ const BillingPage = () => {
       });
   };
 
-  const handleCardPayment = (order,paymentIntent) => {
+  const handleCardPayment = (order, paymentIntent) => {
     const orderStatus = "completed"; // For updating order status
     const tableStatus = "available";
     const tableId = order.tableInfo._id;
@@ -76,26 +76,14 @@ const BillingPage = () => {
       gateway_response: paymentIntent,
     };
     const orderId = order._id;
-    // updatePayment(orderId, updatedData)
-    //   .then((res) => {
-    //     console.log(res);
-    //     return getPendingOrders();
-    //   })
-    //   .catch((response) => {
-    //     console.log(response);
-    //     setOrders(response.data.data);
-    //   })
-    //   .catch((err) => {
-    //     console.log(err);
-    //   });
     updatePayment(orderId, updatedData)
       .then(() => updateOrder({ status: orderStatus }, orderId))
-      .then(() =>
-        Promise.all([
-          updateTable(tableId, { status: tableStatus }),
-          getPendingOrders(),
-        ])
-      ) // Runs both in parallel
+      .then(() => {
+        const tableUpdatePromise = tableId
+          ? updateTable(tableId, { status: tableStatus })
+          : Promise.resolve();
+        Promise.all([tableUpdatePromise, getPendingOrders()]);
+      }) // Runs both in parallel
       .then(([_, response]) => {
         setOrders(response.data.data);
         setPaymentModalOpen(false);
@@ -216,7 +204,7 @@ const BillingPage = () => {
                     ORD: {order._id}
                   </div>
                   <div className="text-sm text-gray-500">
-                    {order.tableInfo.name
+                    {order.tableInfo?.name
                       ? order.tableInfo.name
                       : order.order_type === "dine-in"
                       ? "Dine-in"
@@ -338,7 +326,9 @@ const BillingPage = () => {
                       {paymentMethod === "card" && (
                         <CheckoutForm
                           amount={order.total_amount}
-                          onPaymentSuccess={(paymentIntent) => handleCardPayment(order, paymentIntent)}
+                          onPaymentSuccess={(paymentIntent) =>
+                            handleCardPayment(order, paymentIntent)
+                          }
                         />
                       )}
 

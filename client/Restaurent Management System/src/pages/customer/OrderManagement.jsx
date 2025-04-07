@@ -3,7 +3,7 @@ import { Trash2, ChevronUp, ChevronDown, ShoppingBag } from "lucide-react";
 import {
   deleteOrder,
   deleteOrderItem,
-  getOrders,
+  getNewOrders,
 } from "../../services/orderServices";
 import { toast } from "react-toastify";
 
@@ -15,7 +15,7 @@ const OrderManagement = () => {
 
   //get orders
   useEffect(() => {
-    getOrders()
+    getNewOrders()
       .then((res) => {
         console.log(res);
         setOrders(res.data.data);

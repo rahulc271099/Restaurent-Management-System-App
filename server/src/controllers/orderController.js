@@ -60,8 +60,19 @@ const createOrder = async (req, res) => {
       // Now update the payment record to link with this order
       const updatedPayment = await paymentDB.findOneAndUpdate(
         { transaction_id },
-        { order_id: order._id }
+        { order_id: order._id },
+        { status: "completted" },
+        { new: true }
       );
+
+      //if payment was successful, increase sales_count for each item
+      if (updatedPayment) {
+        for (const item of order_items) {
+          await menuItemDB.findByIdAndUpdate(item.item_id, {
+            $inc: { salesCount: item.quantity },
+          });
+        }
+      }
     }
     const savedOrder = await order.save();
 
@@ -93,7 +104,10 @@ const createOrder = async (req, res) => {
     if (order_type === "dine-in") {
       paymentStatus = payment_method === "pay-later" ? "pending" : "success";
     } else if (order_type === "takeaway") {
-      paymentStatus = payment_method === "cash" ? "success" : "pending"; // Cash is paid immediately, other methods are pending
+      paymentStatus =
+        payment_method === "online" || payment_method === "card"
+          ? "success"
+          : "pending"; // Cash is paid immediately, other methods are pending
     } else if (order_type === "delivery") {
       paymentStatus =
         payment_method === "online" || payment_method === "card"
@@ -165,6 +179,29 @@ const getOrders = async (req, res) => {
   }
 };
 
+const getNewOrders = async (req, res) => {
+  try {
+    const user_id = req.user.id;
+    const pendingOrders = await orderDB
+      .find({ user_id, status: ["pending", "preparing", "out-to-delivery"] })
+      .lean() // Convert to plain JSON
+      .populate("user_id", "_id name");
+    for (let order of pendingOrders) {
+      order.order_items = await orderItemDB
+        .find({ order_id: order._id })
+        .populate("item_id", "name price image");
+    }
+    res.status(200).json({
+      success: true,
+      data: pendingOrders,
+    });
+  } catch (err) {
+    res.status(500).json({
+      error: "Internal server error",
+    });
+  }
+};
+
 const getOneOrder = async (req, res) => {
   try {
     const { orderId } = req.params;
@@ -188,64 +225,64 @@ const getPendingOrders = async (req, res) => {
   try {
     const pendingOrders = await orderDB.aggregate([
       {
-        $match: { 
-          order_type: { $in: ["dine-in", "takeaway"] }
-        }
+        $match: {
+          order_type: { $in: ["dine-in", "takeaway"] },
+        },
       },
       {
         $lookup: {
           from: "orderitems",
           localField: "_id",
           foreignField: "order_id",
-          as: "orderedItems"
-        }
+          as: "orderedItems",
+        },
       },
       {
         $unwind: {
           path: "$orderedItems",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $lookup: {
           from: "menuitems",
           localField: "orderedItems.item_id",
           foreignField: "_id",
-          as: "menuDetails"
-        }
+          as: "menuDetails",
+        },
       },
       {
         $lookup: {
           from: "tables",
           localField: "table_id",
           foreignField: "_id",
-          as: "tableInfo"
-        }
+          as: "tableInfo",
+        },
       },
       {
         $lookup: {
           from: "payments",
           localField: "_id",
           foreignField: "order_id",
-          as: "paymentDetails"
-        }
+          as: "paymentDetails",
+        },
       },
       {
         $unwind: {
           path: "$menuDetails",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $unwind: {
           path: "$paymentDetails",
-          preserveNullAndEmptyArrays: true
-        }
+          preserveNullAndEmptyArrays: true,
+        },
       },
       {
         $match: {
-          "paymentDetails.payment_status": "pending" // Only fetch orders with pending payments
-        }
+          "paymentDetails.payment_status": "pending", // Only fetch orders with pending payments
+        },
       },
       {
         $group: {
@@ -260,27 +297,28 @@ const getPendingOrders = async (req, res) => {
             $push: {
               quantity: "$orderedItems.quantity",
               price: "$orderedItems.price",
-              details: "$menuDetails"
-            }
-          }
-        }
-      }
+              details: "$menuDetails",
+            },
+          },
+        },
+      },
     ]);
 
     if (!pendingOrders.length) {
-      return res.status(404).json({ error: "No pending orders with pending payments found" });
+      return res
+        .status(404)
+        .json({ error: "No pending orders with pending payments found" });
     }
 
     return res.status(200).json({
       success: true,
-      data: pendingOrders
+      data: pendingOrders,
     });
   } catch (error) {
     console.error("Error fetching pending orders:", error);
     return res.status(500).json({ error: "Internal server error" });
   }
 };
-
 
 const getLatestOrder = async (req, res) => {
   try {
@@ -339,8 +377,8 @@ const updateOrder = async (req, res) => {
     );
     //update sales count
     if (
-      previousStatus !== "completted" &&
-      status.toLowerCase() === "completted"
+      previousStatus !== "completed" &&
+      status.toLowerCase() === "completed"
     ) {
       for (const item of order.order_items) {
         await menuItemDB.findByIdAndUpdate(item.item_id, {
@@ -506,6 +544,7 @@ const deleteOrder = async (req, res) => {
 module.exports = {
   createOrder,
   getOrders,
+  getNewOrders,
   getOneOrder,
   getPendingOrders,
   getLatestOrder,
