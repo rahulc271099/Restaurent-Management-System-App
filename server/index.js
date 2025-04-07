@@ -10,7 +10,7 @@ const cookieParser = require('cookie-parser');
 // origin: "http://localhost:5174",
 app.use(
     cors({
-      origin:"https://restaurent-management-system-app-huh9.vercel.app",
+      origin: ["http://localhost:5174", "https://restaurent-management-system-app-huh9.vercel.app"],
       credentials: true,
     })
   );

@@ -28,30 +28,11 @@ const login = async (req, res) => {
   const token = createToken(user._id, user.role);
   res.cookie("token", token, {
     httpOnly: true, // ✅ Prevents XSS attacks
-    secure: process.env.NODE_ENV === "production", // ✅ Uses HTTPS in production
+    secure: true, // ✅ Uses HTTPS in production
     sameSite: "None",
     path: "/", // Make the cookie available site-wide
     maxAge: 24 * 60 * 60 * 1000,
   });
-
-  // // Determine the dashboard based on the role field in the same document
-  // let dashboard;
-  // switch (user.role) {
-  //   case "admin":
-  //     dashboard = "/admin-dashboard";
-  //     break;
-  //   case "staff":
-  //     dashboard = "/staff-dashboard";
-  //     break;
-  //   case "customer":
-  //     dashboard = "/customer-dashboard";
-  //     break;
-  //   default:
-  //     return { error: "Unknown user role" };
-  // }
-
-  // Return the user object along with the corresponding dashboard route
-  //   return { user, dashboard };
   res.status(200).json({
     success: true,
     messege: `${user.role} login successful`,
