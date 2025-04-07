@@ -13,7 +13,7 @@ import {
 import { getPendingOrders, updateOrder } from "../../services/orderServices";
 import { FiArrowLeft } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
-import CheckoutForm from "../../components/shared/CheckOutForm";
+import CheckoutForm from "../../components/shared/CheckoutForm";
 import { updatePayment } from "../../services/paymentServices";
 import { updateTable } from "../../services/tableServices";
 

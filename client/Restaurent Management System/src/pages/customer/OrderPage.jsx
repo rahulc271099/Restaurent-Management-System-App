@@ -4,7 +4,8 @@ import { toast } from "react-toastify";
 import { getCart } from "../../services/cartServices";
 import { createOrder } from "../../services/orderServices";
 import { loadStripe } from "@stripe/stripe-js";
-import CheckoutForm from "../../components/shared/CheckOutForm";
+import CheckoutForm from "../../components/shared/CheckoutForm";
+
 
 const stripePromise = loadStripe(import.meta.env.STRIPE_PUBLISHABLE_KEY); // Replace with your Stripe key
 
