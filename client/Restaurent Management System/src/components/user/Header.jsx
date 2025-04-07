@@ -263,7 +263,7 @@ const Header = () => {
                 </Link>
               </div> */}
               <Link
-                to="/cart" // Don't forget the leading slash for absolute path
+                to="cart" // Don't forget the leading slash for absolute path
                 className={`flex w-full items-center justify-center px-5 py-3 text-sm font-medium rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white shadow-md transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 mb-2 gap-2 ${
                   isScrolled
                     ? "text-gray-600 hover:text-amber-600"
