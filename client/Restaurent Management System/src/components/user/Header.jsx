@@ -217,23 +217,29 @@ const Header = () => {
             }`}
           >
             {["Home", "Menu", "About", "Gallery", "Contact"].map(
-              (item, index) => (
-                <a
-                  key={item}
-                  href=""
-                  className={`block px-3 py-2 rounded-lg text-base font-medium ${
-                    index === 0
-                      ? isScrolled
-                        ? "bg-amber-50 text-amber-700"
-                        : "bg-white/10 text-amber-300"
-                      : isScrolled
-                      ? "text-gray-600 hover:bg-gray-50 hover:text-amber-600"
-                      : "text-white/80 hover:bg-white/10 hover:text-white"
-                  }`}
-                >
-                  {item}
-                </a>
-              )
+              (item, index) => {
+                const path =
+                  item.toLowerCase() === "home"
+                    ? "home"
+                    : `${item.toLowerCase()}`;
+                return (
+                  <NavLink
+                    key={item}
+                    to={path}
+                    className={`block px-3 py-2 rounded-lg text-base font-medium ${
+                      index === 0
+                        ? isScrolled
+                          ? "bg-amber-50 text-amber-700"
+                          : "bg-white/10 text-amber-300"
+                        : isScrolled
+                        ? "text-gray-600 hover:bg-gray-50 hover:text-amber-600"
+                        : "text-white/80 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    {item}
+                  </NavLink>
+                );
+              }
             )}
             <div className="mt-4 px-3">
               <div className="flex w-full items-center justify-center px-5 py-3 text-sm font-medium rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white shadow-md transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 mb-2">
