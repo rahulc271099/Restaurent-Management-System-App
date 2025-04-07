@@ -237,12 +237,12 @@ const Header = () => {
                     // }`}
                     className={({ isActive }) =>
                       `block px-3 py-2 rounded-lg text-base font-medium transition-colors duration-300 ${
-                        index === 0
+                        isActive
+                          ? "text-amber-500"
+                          : index === 0
                           ? isScrolled
                             ? "bg-amber-50 text-amber-700"
                             : "bg-white/10 text-amber-300"
-                          : isActive
-                          ? "text-white"
                           : isScrolled
                           ? "text-gray-600 hover:bg-gray-50 hover:text-amber-600"
                           : "text-white/80 hover:bg-white/10 hover:text-white"
