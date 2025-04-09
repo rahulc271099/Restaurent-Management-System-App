@@ -251,6 +251,7 @@ const Header = () => {
                   <NavLink
                     key={item}
                     to={path}
+                    onClick={()=>setIsMenuOpen(false)}
                     className={({ isActive }) =>
                       `block px-3 py-2 rounded-lg text-base font-medium transition-colors duration-300 md:hidden ${
                         isActive
@@ -271,13 +272,14 @@ const Header = () => {
               }
             )}
             <div className="mt-4 px-3">
-              <Link
-                to="cart" // Don't forget the leading slash for absolute path
-                className={`flex w-full items-center justify-center px-5 py-3 text-sm font-medium rounded-full bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-200 hover:to-amber-400 text-white hover:text-black shadow-md transition-all duration-300 hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 mb-2 gap-2 ${
-                  isScrolled
-                    ? "text-gray-600 hover:text-amber-600"
-                    : "text-white/80 hover:text-white"
-                }`}
+              <button
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  navigate("/customer/cart");
+                }} // Don't forget the leading slash for absolute path
+                className={
+                  "flex w-full items-center justify-center px-5 py-3 text-sm font-medium rounded-full bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-200 hover:to-amber-400 text-white hover:text-black shadow-md transition-all duration-300 hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 mb-2 gap-2"
+                }
               >
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -288,7 +290,7 @@ const Header = () => {
                   <path d="M3 1a1 1 0 000 2h1.22l.305 1.222a.997.997 0 00.01.042l1.358 5.43-.893.892C3.74 11.846 4.632 14 6.414 14H15a1 1 0 000-2H6.414l1-1H14a1 1 0 00.894-.553l3-6A1 1 0 0017 3H6.28l-.31-1.243A1 1 0 005 1H3z" />
                 </svg>
                 Cart
-              </Link>
+              </button>
               <button
                 type="button"
                 onClick={() => {
@@ -315,7 +317,7 @@ const Header = () => {
                   setIsMenuOpen(false);
                   navigate("/customer/reservation");
                 }}
-                className="w-full flex items-center justify-center px-5 py-3 text-sm font-medium rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white shadow-md transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
+                className="w-full flex items-center justify-center px-5 py-3 text-sm font-medium rounded-full bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-200 hover:to-amber-400 text-white hover:text-black shadow-md transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
               >
                 Book a Table
               </button>
