@@ -1,15 +1,17 @@
-import React from "react";
+import React, { useRef } from "react";
 import { useState, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { userLogout } from "../../services/userServices";
 import { toast } from "react-toastify";
+import { LogOut } from "lucide-react";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const { logout } = useAuth();
+  const menuButtonRef = useRef();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -43,6 +45,28 @@ const Header = () => {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (menuButtonRef.current && !menuButtonRef.current.contains(e.target)) {
+        menuButtonRef.current.blur(); // Remove ring
+      }
+    }
+
+    function handleScroll() {
+      if (menuButtonRef.current) {
+        menuButtonRef.current.blur(); // Also remove ring on scroll
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    window.addEventListener("scroll", handleScroll);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      window.removeEventListener("scroll", handleScroll);
+    };
   }, []);
   return (
     <header>
@@ -162,6 +186,7 @@ const Header = () => {
             <div className="flex items-center lg:hidden">
               <button
                 onClick={() => setIsMenuOpen(!isMenuOpen)}
+                ref={menuButtonRef}
                 className={`inline-flex items-center justify-center p-2 rounded-full ${
                   isScrolled
                     ? "text-gray-500 hover:bg-gray-100"
@@ -226,17 +251,8 @@ const Header = () => {
                   <NavLink
                     key={item}
                     to={path}
-                    // className={`block px-3 py-2 rounded-lg text-base font-medium ${
-                    //   index === 0
-                    //     ? isScrolled
-                    //       ? "bg-amber-50 text-amber-700"
-                    //       : "bg-white/10 text-amber-300"
-                    //     : isScrolled
-                    //     ? "text-gray-600 hover:bg-gray-50 hover:text-amber-600"
-                    //     : "text-white/80 hover:bg-white/10 hover:text-white"
-                    // }`}
                     className={({ isActive }) =>
-                      `block px-3 py-2 rounded-lg text-base font-medium transition-colors duration-300 ${
+                      `block px-3 py-2 rounded-lg text-base font-medium transition-colors duration-300 md:hidden ${
                         isActive
                           ? "text-amber-500"
                           : index === 0
@@ -257,7 +273,7 @@ const Header = () => {
             <div className="mt-4 px-3">
               <Link
                 to="cart" // Don't forget the leading slash for absolute path
-                className={`flex w-full items-center justify-center px-5 py-3 text-sm font-medium rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white shadow-md transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 mb-2 gap-2 ${
+                className={`flex w-full items-center justify-center px-5 py-3 text-sm font-medium rounded-full bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-200 hover:to-amber-400 text-white hover:text-black shadow-md transition-all duration-300 hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 mb-2 gap-2 ${
                   isScrolled
                     ? "text-gray-600 hover:text-amber-600"
                     : "text-white/80 hover:text-white"
@@ -279,7 +295,7 @@ const Header = () => {
                   setIsMenuOpen(false);
                   navigate("/customer/orderManagement");
                 }}
-                className="w-full flex items-center justify-center px-5 py-3 text-sm font-medium rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white shadow-md transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 mb-2"
+                className="w-full flex items-center justify-center px-5 py-3 text-sm font-medium rounded-full bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-200 hover:to-amber-400 text-white hover:text-black shadow-md transition-all duration-300 hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 mb-2"
               >
                 Orders
               </button>
@@ -289,7 +305,7 @@ const Header = () => {
                   setIsMenuOpen(false);
                   navigate("/customer/reservationManagement");
                 }}
-                className="w-full flex items-center justify-center px-5 py-3 text-sm font-medium rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white shadow-md transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 mb-2"
+                className="w-full flex items-center justify-center px-5 py-3 text-sm font-medium rounded-full bg-gradient-to-r from-amber-400 to-amber-600 hover:from-amber-200 hover:to-amber-400 text-white hover:text-black shadow-md transition-all duration-300 hover:shadow-2xl focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500 mb-2"
               >
                 Reservations
               </button>
@@ -302,6 +318,14 @@ const Header = () => {
                 className="w-full flex items-center justify-center px-5 py-3 text-sm font-medium rounded-full bg-gradient-to-r from-amber-400 to-amber-600 text-white shadow-md transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
               >
                 Book a Table
+              </button>
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center px-5 py-3 mt-2 text-sm font-medium rounded-full bg-gradient-to-r from-blue-400 to-blue-600 text-white shadow-md transition-all duration-300 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
+              >
+                <LogOut className="mr-2" />
+                Logout
               </button>
             </div>
           </div>

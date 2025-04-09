@@ -9,6 +9,7 @@ const LoginPage = () => {
     email: "",
     password: "",
   });
+  const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
   const { login } = useAuth();
@@ -18,27 +19,29 @@ const LoginPage = () => {
   };
   const handleSubmit = (e) => {
     e.preventDefault();
+    setIsLoading(true);
     userLogin(data)
       .then((res) => {
         console.log(res);
         console.log(res.data.user.role);
-        const userData = {...res.data.user,token:res.data.token}
-        login(userData)
+        const userData = { ...res.data.user, token: res.data.token };
+        login(userData);
 
         // Redirect according to the user's role.
         if (userData.role === "admin") {
-            navigate("/admin", { replace: true });
-          } else if (userData.role === "staff") {
-            navigate("/staff", { replace: true });
-          } else if (userData.role === "customer") {
-            navigate("/customer/home", { replace: true });
-          } else {
-            // Fallback route if role is unknown
-            navigate("/", { replace: true });
-          }
+          navigate("/admin", { replace: true });
+        } else if (userData.role === "staff") {
+          navigate("/staff", { replace: true });
+        } else if (userData.role === "customer") {
+          navigate("/customer/home", { replace: true });
+        } else {
+          // Fallback route if role is unknown
+          navigate("/", { replace: true });
+        }
       })
       .catch((err) => {
         console.log(err);
+        setIsLoading(false);
       });
   };
   return (
@@ -58,8 +61,8 @@ const LoginPage = () => {
         </p>
       </div>
 
-      <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+      <div className="mt-8 px-4 sm:px-6 sm:mx-auto sm:w-full sm:max-w-md">
+        <div className="bg-white py-8 px-6 shadow sm:rounded-lg sm:px-10">
           <form className="space-y-6">
             <div>
               <label
@@ -134,8 +137,32 @@ const LoginPage = () => {
                 type="button"
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-amber-600 hover:bg-amber-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-amber-500"
                 onClick={handleSubmit}
+                disabled={isLoading}
               >
-                Sign in
+                {isLoading ? (
+                  <svg
+                    className="animate-spin h-5 w-5 text-white"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      className="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                    />
+                    <path
+                      className="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8v8H4z"
+                    />
+                  </svg>
+                ) : (
+                  "Sign in"
+                )}
               </button>
             </div>
           </form>

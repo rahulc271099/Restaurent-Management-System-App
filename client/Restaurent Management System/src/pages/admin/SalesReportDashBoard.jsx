@@ -65,14 +65,14 @@ const SalesReportDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <header className="bg-white shadow">
+      <header className="bg-white shadow-lg border-2 rounded-lg">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-            <div>
+          <div className="flex flex-col lg:flex-row lg:items-center md:justify-between">
+            <div className='sm:flex-col md:flex-row'>
               <h1 className="text-2xl font-bold text-gray-900">Sales Report</h1>
               <p className="mt-1 text-sm text-gray-500">View and analyze your sales performance</p>
             </div>
-            <div className="mt-4 md:mt-0 flex space-x-3">
+            <div className="mt-4 sm:flex-row md:flex-row md:mt-0 flex space-x-3">
               <div className="relative">
                 <select 
                   value={dateRange}

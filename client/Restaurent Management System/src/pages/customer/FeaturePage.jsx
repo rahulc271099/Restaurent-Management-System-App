@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { getChefSpecial } from "../../services/menuServices";
 import { addToCart } from "../../services/cartServices";
@@ -9,6 +9,8 @@ const FeaturePage = () => {
 
   const navigate = useNavigate()
   const [chefSpecial,setChefSpecial] = useState([])
+  const [isVisible, setIsVisible] = useState(false);
+  const imageRef = useRef(null);
 
   useEffect(()=>{
     getChefSpecial().then(res=>{
@@ -18,6 +20,21 @@ const FeaturePage = () => {
       console.log(err);
     })
   },[])
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) setIsVisible(true);
+      },
+      { threshold: 0.2 }
+    );
+
+    if (imageRef.current) observer.observe(imageRef.current);
+
+    return () => {
+      if (imageRef.current) observer.unobserve(imageRef.current);
+    };
+  }, []);
 
   const handleAddToCart = (item) =>{
       addToCart({
@@ -78,10 +95,14 @@ const FeaturePage = () => {
         <div className="mt-16">
           <div className="grid grid-cols-1 gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
             {chefSpecial ?.map((item) => (
-              <div key={item._id} className="group">
+              <div ref={imageRef} key={item._id} className="group">
                 <div className="relative overflow-hidden rounded-2xl mb-5 h-[400px]">
                 <img
-                      className="w-full h-full object-cover transform transition-transform duration-500 group-hover:scale-110"
+                      className={`w-full h-full object-cover transform transition-transform duration-500
+                        ${isVisible ? "scale-110" : ""}
+                        group-hover:scale-110
+                        lg:scale-100
+                      `}
                       src={item.image}
                       alt={item.name}
                     />

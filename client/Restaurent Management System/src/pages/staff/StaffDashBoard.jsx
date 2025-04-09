@@ -417,7 +417,7 @@ const StaffDashBoard = () => {
         <h2 className="text-2xl font-bold mb-4">{selectedCategory.name}</h2>
         <div
           className={`grid ${
-            isOrderOpen ? "grid-cols-2" : "md:grid-cols-2 lg:grid-cols-3"
+            isOrderOpen ? "sm:grid-cols-1 md:grid-cols-2" : " grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3"
           } gap-4`}
         >
           {menuItems
@@ -452,7 +452,7 @@ const StaffDashBoard = () => {
       </div>
 
       {orderTypeModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center">
+        <div className="fixed inset-0 z-50 bg-black bg-opacity-40 flex justify-center items-center px-4 sm:px-6">
           <div className="bg-white w-[500px] rounded-2xl shadow-2xl overflow-hidden">
             {/* Header */}
             <div className="bg-gradient-to-r from-blue-500 to-purple-600 p-6">
@@ -551,7 +551,7 @@ const StaffDashBoard = () => {
                 </p>
               </div>
               <button
-                onClick={() => setIsOrderOpen(false)}
+                onClick={() =>setIsOrderOpen(false)}
                 className="bg-white/20 hover:bg-white/30 p-2 rounded-full transition"
               >
                 <svg
