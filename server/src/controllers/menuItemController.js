@@ -5,6 +5,7 @@ const uploadToCloudinary = require("../Utilities/imageUpload");
 const createMenuItem = async (req, res) => {
   try {
     const { name, description, price, category, dietary, availability,chefSpecial } = req.body;
+    console.log(req.body);
     if (!name || !description || !price || !category || !availability) {
       return res.status(400).json({
         error: "All fields are required",

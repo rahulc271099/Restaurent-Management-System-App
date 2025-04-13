@@ -3,6 +3,7 @@ import { userLogin } from "../../services/userServices";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { toast } from "react-toastify";
 
 const LoginPage = () => {
   const [data, setData] = useState({
@@ -42,6 +43,7 @@ const LoginPage = () => {
       .catch((err) => {
         console.log(err);
         setIsLoading(false);
+        toast.error(err.response.data.error)
       });
   };
   return (
@@ -55,7 +57,7 @@ const LoginPage = () => {
         </h2>
         <p className="mt-2 text-center text-sm text-gray-600 font-bold">
           Or{" "}
-          <Link to={"/register"} className="hover:text-blue-600">
+          <Link to={"/register"} className="text-amber-600 hover:text-amber-500">
             create a new account
           </Link>
         </p>
