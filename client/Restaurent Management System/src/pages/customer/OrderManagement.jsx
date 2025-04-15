@@ -47,7 +47,7 @@ const OrderManagement = () => {
     deleteOrderItem(orderId, orderItemId)
       .then((res) => {
         console.log(res);
-        return getOrders();
+        return getNewOrders();
       })
       .then((response) => {
         console.log(response);
