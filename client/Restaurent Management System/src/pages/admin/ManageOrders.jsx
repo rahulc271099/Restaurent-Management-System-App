@@ -324,9 +324,9 @@ const ManageOrders = () => {
                       {/* <FiPackage className="mr-2 text-gray-400" /> */}
                       {/* {order.items} */}
                       {order.order_items.map((item) => (
-                        <p key={item.item_id._id} className="flex items-center">
+                        <p key={item.item_id ?._id} className="flex items-center">
                           <FiPackage className="mr-2 text-gray-400" />
-                          {item ?.item_id.name}
+                          {item.item_id ?.name}
                         </p>
                       ))}
                     </div>

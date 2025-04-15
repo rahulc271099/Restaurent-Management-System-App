@@ -6,6 +6,8 @@ import { getReport } from '../../services/reportServices';
 const SalesReportDashboard = () => {
   const [dateRange, setDateRange] = useState('week');
   const [viewMode, setViewMode] = useState('grid');
+  const [totalRevenue,setTotalRevenue] = useState(0)
+  const [totalOrders,setTotalOrders] = useState(0)
   
   // Sample data based on the MongoDB aggregation
   const totalSalesData = {
@@ -57,6 +59,8 @@ const SalesReportDashboard = () => {
   useEffect(()=>{
     getReport().then(res=>{
       console.log(res);
+      setTotalRevenue(res.data.data.dailySales[0].totalRevenue)
+      setTotalOrders(res.data.data.dailySales[0].totalOrders)
     }).catch(err=>{
       console.log(err);
     })
@@ -107,7 +111,8 @@ const SalesReportDashboard = () => {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500">Total Revenue</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900">{formatCurrency(totalSalesData.totalRevenue)}</p>
+                {/* <p className="mt-1 text-3xl font-bold text-gray-900">{formatCurrency(totalSalesData.totalRevenue)}</p> */}
+                <p className="mt-1 text-3xl font-bold text-gray-900">{formatCurrency(totalRevenue)}</p>
               </div>
               <div className="bg-indigo-100 p-3 rounded-full">
                 <DollarSign className="h-6 w-6 text-indigo-600" />
@@ -126,7 +131,8 @@ const SalesReportDashboard = () => {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500">Total Orders</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900">{totalSalesData.totalOrders.toLocaleString()}</p>
+                {/* <p className="mt-1 text-3xl font-bold text-gray-900">{totalSalesData.totalOrders.toLocaleString()}</p> */}
+                <p className="mt-1 text-3xl font-bold text-gray-900">{totalOrders}</p>
               </div>
               <div className="bg-blue-100 p-3 rounded-full">
                 <ShoppingBag className="h-6 w-6 text-blue-600" />
@@ -145,7 +151,7 @@ const SalesReportDashboard = () => {
             <div className="flex justify-between items-start">
               <div>
                 <p className="text-sm font-medium text-gray-500">Avg. Order Value</p>
-                <p className="mt-1 text-3xl font-bold text-gray-900">{formatCurrency(totalSalesData.averageOrderValue)}</p>
+                <p className="mt-1 text-3xl font-bold text-gray-900">{formatCurrency(totalRevenue/totalOrders)}</p>
               </div>
               <div className="bg-green-100 p-3 rounded-full">
                 <TrendingUp className="h-6 w-6 text-green-600" />
