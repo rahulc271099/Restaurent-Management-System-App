@@ -29,6 +29,7 @@ import StaffLayout from "../layout/StaffLayout";
 import StaffOrderManagement from "../pages/staff/StaffOrderManagement";
 import SalesReportDashboard from "../pages/admin/SalesReportDashBoard";
 import BillingPage from "../pages/admin/BillingPage";
+import ErrorPage from "../pages/shared/Errorpage";
 
 export const router = createBrowserRouter([
   {
@@ -152,4 +153,8 @@ export const router = createBrowserRouter([
       },
     ],
   },
+  {
+    path:"*",
+    element: <ErrorPage/>,
+  }
 ]);
