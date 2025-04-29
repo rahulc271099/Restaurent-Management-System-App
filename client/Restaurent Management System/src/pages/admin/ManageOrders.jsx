@@ -18,6 +18,7 @@ import {
 } from "../../services/orderServices";
 import { getMenuItems } from "../../services/menuServices";
 import { toast } from "react-toastify";
+import { updateTable } from "../../services/tableServices";
 
 const ManageOrders = () => {
   const [orders, setOrders] = useState([]);
@@ -111,6 +112,11 @@ const ManageOrders = () => {
     deleteOrder(currentOrder._id)
       .then((res) => {
         console.log(res);
+        if (currentOrder.table_id && currentOrder.table_id._id) {
+          return updateTable(currentOrder.table_id._id, "available");
+        }
+      })
+      .then(() => {
         return getOrders();
       })
       .then((response) => {
@@ -139,6 +145,7 @@ const ManageOrders = () => {
 
   // Open delete modal with current order
   const openDeleteModal = (order) => {
+    console.log(order);
     setCurrentOrder(order);
     setShowDeleteModal(true);
   };

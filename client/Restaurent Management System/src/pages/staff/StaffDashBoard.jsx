@@ -669,7 +669,7 @@ const StaffDashBoard = () => {
               </div>
             )}
 
-            {selectedOrderType.toLowerCase() === "delivery" && (
+            {selectedOrderType ?.toLowerCase() === "delivery" && (
               <div className="max-h-[calc(100vh-300px)] overflow-y-auto">
                 <div className="p-4 bg-gray-50 border-t border-gray-200">
                   <h3 className="text-md font-bold mb-3 flex items-center text-gray-700">
